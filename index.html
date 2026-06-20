@@ -189,6 +189,18 @@ input[type=password],input[type=text]{font-size:12px;padding:5px 8px;border:.5px
 .mr-empty{text-align:center;padding:30px 20px}
 .mr-empty i{font-size:36px;color:var(--text3);margin-bottom:10px;display:block}
 .mr-empty p{font-size:13px;color:var(--text2);line-height:1.6}
+
+.pos-group{font-size:9px;font-weight:600;color:var(--text2);letter-spacing:.07em;text-transform:uppercase;padding:8px 13px 4px}
+.pos-item{padding:10px 13px;border-top:.5px solid var(--border);background:var(--bg)}
+.pos-header{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.pos-ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.pos-name{font-size:13px;font-weight:600;color:var(--text)}
+.pos-cat{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600}
+.pos-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.pos-field label{display:block;font-size:9px;color:var(--text2);margin-bottom:2px}
+.pos-field input{width:100%;font-size:12px;padding:5px 7px;border:.5px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--text);-webkit-appearance:none;outline:none}
+.pos-stop{font-size:12px;padding:5px 7px;border:.5px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--dn);font-weight:600;text-align:center}
+.pos-stop-lbl{font-size:8px;color:var(--blue);margin-top:1px;text-align:center}
 </style>
 </head>
 <body>
@@ -329,14 +341,17 @@ input[type=password],input[type=text]{font-size:12px;padding:5px 8px;border:.5px
   </div>
 
   <div class="lbl">持股設定</div>
-  <div class="card">
-    <div style="padding:10px 13px 6px;font-size:11px;color:var(--text2)">點擊各標的修改成本價、股數與停損價，儲存後立即生效。</div>
-    <div id="stock-edit-list"></div>
-    <div style="padding:10px 13px">
-      <button class="bbtn" onclick="saveStocks()">儲存持股設定</button>
-      <div id="stock-save-msg" style="font-size:10px;color:var(--text2);margin-top:5px;text-align:center"></div>
-    </div>
+  <div style="font-size:11px;color:var(--text2);padding:0 2px 4px">填入實際成交成本和股數，停損由 AI 自動計算。</div>
+  <div class="card" id="pos-tw-card">
+    <div class="pos-group">台股</div>
+    <div id="pos-tw"></div>
   </div>
+  <div class="card" id="pos-us-card">
+    <div class="pos-group">美股</div>
+    <div id="pos-us"></div>
+  </div>
+  <button class="bbtn" onclick="saveStocks()">儲存持股設定</button>
+  <div id="stock-save-msg" style="font-size:10px;color:var(--text2);margin-top:2px;text-align:center"></div>
   <div class="lbl">關於</div>
   <div class="card" style="padding:12px 13px;font-size:11px;color:var(--text2);line-height:2">
     投資助理 v5.1 &nbsp;·&nbsp; 手機獨立版<br>台股 7 檔 + 美股 5 檔<br>功率半導體 · 台積電 · PCB衛星 · 月度報告
