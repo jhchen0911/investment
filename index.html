@@ -456,19 +456,7 @@ function fV(n){
   var w=n/10000;return(n>=0?'':'−')+'NT$'+(Math.abs(w)>=1?Math.abs(w).toFixed(1)+'萬':Math.round(Math.abs(n)).toLocaleString());
 }
 function pct(p,c){return(p>=c?'+':'')+((p-c)/c*100).toFixed(1)+'%'}
-function alrt(s){var p=P[s.id];if(!p)return null;var st=calcStop(s);if(p<=st)return'r';if((p-st)/p<0.03)return'y';return'g';}
-function isUS(s){return STOCKS.us.indexOf(s)>-1;}
-function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
-function cStats(){
-  var r={};
-  ALL.forEach(function(s){
-    var p=P[s.id];
-    if(!r[s.cat])r[s.cat]={pnl:0,has:false,cnt:0};
-    r[s.cat].cnt++;
-    if(p){r[s.cat].pnl+=ntd(s,p);r[s.cat].has=true;}
-  });
-  return r;
-}
+
 function render(){
   var twC=0,usC=0,twP=0,usP=0,has=Object.keys(P).length>0;
   STOCKS.tw.forEach(function(s){var p=P[s.id];twC+=s.cost*s.qty;if(p)twP+=ntd(s,p);});
@@ -535,7 +523,6 @@ function rStops(){
       if(a==='r'){dc='str2';dH='<span class="tag tr">已觸發</span>';bP=0;bC='#E24B4A';hits.push(s.n);}
       else if(a==='y'){dc='sty2';dH='<span class="tag ty">−'+ts.toFixed(1)+'%</span>';bC='#EF9F27';}
       else{dc='stg2';dH='<span class="tag tg">−'+ts.toFixed(1)+'%</span>';bC='#639922';}
-    }
     }
     return '<div class="stitem"><div class="stdot '+dc+'"></div><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:5px;overflow:hidden;min-width:0"><span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap">'+s.n+'</span><span class="tag" style="background:'+c.b+';color:'+c.c+';flex-shrink:0">'+c.s+'</span></div>'+dH+'</div><div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%">'+s.sub+'</span><span style="font-size:10px;color:var(--text2);flex-shrink:0">停損 '+(iu?'$':'NT$')+s.stop+'</span></div><div class="stbar"><div class="stfill" style="width:'+bP+'%;background:'+bC+'"></div></div></div></div>';
   }).join('');
@@ -802,6 +789,18 @@ function loadStockConfig(){
   }catch(e){}
 }
 // ── alrt 使用動態停損 ──
+function isUS(s){return STOCKS.us.indexOf(s)>-1;}
+function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
+function cStats(){
+  var r={};
+  ALL.forEach(function(s){
+    var p=P[s.id];
+    if(!r[s.cat])r[s.cat]={pnl:0,has:false,cnt:0};
+    r[s.cat].cnt++;
+    if(p){r[s.cat].pnl+=ntd(s,p);r[s.cat].has=true;}
+  });
+  return r;
+}
 function alrt(s){
   var p=P[s.id];if(!p)return null;
   var st=calcStop(s);
