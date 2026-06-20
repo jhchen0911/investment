@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="投資助理">
+<meta name="theme-color" content="#ffffff">
+<title>投資助理</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#f0efed;
+  --text:#1a1a1a;--text2:#6b7280;--text3:#9ca3af;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --blue:#185FA5;--bluebg:#E6F1FB;--blueborder:#B5D4F4;
+  --up:#16a34a;--dn:#dc2626;
+  --r-bg:#FCEBEB;--r-c:#A32D2D;
+  --y-bg:#FAEEDA;--y-c:#854F0B;
+  --g-bg:#EAF3DE;--g-c:#3B6D11;
+  --p-bg:#EEEDFE;--p-c:#3C3489;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;--text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;--border:rgba(255,255,255,0.12);--border2:rgba(255,255,255,0.22);--bluebg:#0a2a4a;--blueborder:#1e4d80;--r-bg:#3a1212;--r-c:#f87171;--y-bg:#3a2a00;--y-c:#fbbf24;--g-bg:#0f2a0f;--g-c:#4ade80;--p-bg:#1a1640;--p-c:#a5b4fc;}
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3)}
+.app{height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:var(--bg3)}
+.hdr{height:52px;background:var(--bg);border-bottom:.5px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--bluebg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo i{color:var(--blue);font-size:14px}
+.htitle{flex:1;min-width:0}
+.htitle h1{font-size:13px;font-weight:600;color:var(--text)}
+.htitle p{font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fxt{display:flex;background:var(--bg2);border-radius:8px;padding:2px;flex-shrink:0}
+.fxb{padding:3px 7px;border-radius:6px;border:none;background:transparent;font-size:10px;cursor:pointer;color:var(--text2);font-family:inherit}
+.fxb.on{background:var(--bg);color:var(--blue);font-weight:600;box-shadow:0 0 0 .5px var(--border2)}
+.hbtn{width:30px;height:30px;border-radius:50%;border:.5px solid var(--border2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px;flex-shrink:0}
+.pg{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
+.pg::-webkit-scrollbar{display:none}
+/* Bottom nav — 6 tabs, smaller */
+.bnav{height:54px;background:var(--bg);border-top:.5px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:none;background:transparent;cursor:pointer;color:var(--text3);font-size:8px;font-family:inherit;padding:5px 0}
+.nb.on{color:var(--blue)}
+.nb i{font-size:16px}
+.nb.on i{color:var(--blue)}
+/* Cards */
+.card{background:var(--bg);border:.5px solid var(--border);border-radius:12px;overflow:hidden}
+.hero{background:var(--bg);border:.5px solid var(--border);border-radius:12px;padding:14px}
+.hero-pnl{font-size:28px;font-weight:600;letter-spacing:-.5px}
+.hero-pnl.up{color:var(--up)}.hero-pnl.dn{color:var(--dn)}.hero-pnl.neu{color:var(--text2)}
+.lbl{font-size:9px;font-weight:600;color:var(--text2);letter-spacing:.07em;text-transform:uppercase}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.met{background:var(--bg2);border-radius:8px;padding:9px 10px}
+.ml{font-size:9px;color:var(--text2);margin-bottom:2px}
+.mv{font-size:13px;font-weight:600;color:var(--text)}
+.mv.up{color:var(--up)}.mv.dn{color:var(--dn)}
+/* View toggle */
+.vtg{display:flex;background:var(--bg2);border-radius:8px;padding:2px}
+.vb{flex:1;padding:4px 6px;border-radius:6px;border:none;background:transparent;font-size:11px;cursor:pointer;color:var(--text2);white-space:nowrap;font-family:inherit}
+.vb.on{background:var(--bg);color:var(--text);font-weight:600;box-shadow:0 0 0 .5px var(--border2)}
+/* Tab toggle inside page */
+.ptg{display:flex;background:var(--bg2);border-radius:10px;padding:2px;gap:2px}
+.pb{flex:1;padding:7px;border-radius:8px;border:none;background:transparent;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit;font-weight:500}
+.pb.on{background:var(--bg);color:var(--text);font-weight:600;box-shadow:0 0 0 .5px var(--border2)}
+/* Cat summary */
+.csg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.cscard{border-radius:8px;padding:8px 10px;border:.5px solid var(--border)}
+.csh{display:flex;align-items:center;gap:4px;margin-bottom:3px}
+.csdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.csname{font-size:9px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cspnl{font-size:12px;font-weight:600}
+.cspnl.up{color:var(--up)}.cspnl.dn{color:var(--dn)}.cspnl.neu{color:var(--text2)}
+/* Cat group header */
+.cghdr{display:flex;align-items:center;padding:7px 13px;gap:7px}
+.cgdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cgname{font-size:11px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cgright{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.cgcnt{font-size:9px;color:var(--text2)}
+.cgpnl{font-size:11px;font-weight:600;white-space:nowrap}
+.cgpnl.up{color:var(--up)}.cgpnl.dn{color:var(--dn)}.cgpnl.neu{color:var(--text2)}
+/* Stock row */
+.srow{display:flex;align-items:center;padding:10px 13px;border-top:.5px solid var(--border);gap:8px}
+.sic{width:31px;height:31px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.smid{flex:1;min-width:0}
+.sname{font-size:13px;font-weight:600;color:var(--text)}
+.smeta{display:flex;align-items:center;gap:4px;margin-top:2px;overflow:hidden}
+.ssub{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ssubc{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sright{text-align:right;flex-shrink:0}
+.sprice{font-size:13px;font-weight:600;color:var(--text)}
+.spnl{font-size:10px;font-weight:600;margin-top:1px}
+.spnl.up{color:var(--up)}.spnl.dn{color:var(--dn)}
+/* Badges */
+.tag{display:inline-flex;align-items:center;gap:2px;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.tr{background:var(--r-bg);color:var(--r-c)}
+.ty{background:var(--y-bg);color:var(--y-c)}
+.tg{background:var(--g-bg);color:var(--g-c)}
+.tb{background:var(--bluebg);color:var(--blue)}
+.tp{background:var(--p-bg);color:var(--p-c)}
+/* Stop */
+.stitem{display:flex;align-items:center;padding:10px 13px;border-top:.5px solid var(--border);gap:9px}
+.stdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.str2{background:#E24B4A}.sty2{background:#EF9F27}.stg2{background:#639922}.stx{background:var(--border2)}
+.stbar{height:3px;background:var(--bg2);border-radius:2px;margin-top:4px;overflow:hidden}
+.stfill{height:100%;border-radius:2px;transition:width .4s}
+/* Events */
+.evi{padding:10px 13px;border-top:.5px solid var(--border);display:flex;gap:10px}
+.evdc{width:34px;text-align:center;flex-shrink:0}
+.evm{font-size:9px;color:var(--text2);text-transform:uppercase}
+.evd{font-size:16px;font-weight:700;color:var(--text);line-height:1}
+/* Filter pills */
+.fsc{display:flex;gap:5px;overflow-x:auto;padding:8px 13px 0;scrollbar-width:none}
+.fsc::-webkit-scrollbar{display:none}
+.fp{padding:4px 10px;border-radius:20px;border:.5px solid var(--border2);font-size:11px;cursor:pointer;background:transparent;color:var(--text2);white-space:nowrap;flex-shrink:0;font-family:inherit}
+.fp.on{background:var(--bluebg);color:var(--blue);border-color:var(--blue)}
+/* News */
+.ni{padding:10px 13px;border-top:.5px solid var(--border)}
+.ntitle{font-size:12px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:3px}
+.nbody{font-size:11px;color:var(--text2);line-height:1.5}
+.nimp{font-size:10px;background:var(--bg2);border-radius:8px;padding:4px 7px;margin-top:4px;color:var(--text2);line-height:1.5}
+/* AI quick */
+.aimsg{background:var(--bg2);border-radius:10px;padding:11px;font-size:12px;color:var(--text);line-height:1.7;white-space:pre-wrap;min-height:68px}
+.aiq{display:flex;align-items:center;gap:8px;padding:10px 13px;border-top:.5px solid var(--border);cursor:pointer;background:transparent;border-right:none;border-left:none;border-bottom:none;width:100%;text-align:left;font-family:inherit}
+.aiq:active{background:var(--bg2)}
+.aiqic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.aiqt{font-size:12px;color:var(--text);flex:1;line-height:1.3}
+.aiqc{font-size:12px;color:var(--text2)}
+/* Monthly report */
+.mr-header{padding:14px;background:linear-gradient(135deg,var(--bluebg) 0%,var(--p-bg) 100%);border-radius:12px}
+.mr-title{font-size:16px;font-weight:700;color:var(--blue);margin-bottom:2px}
+.mr-sub{font-size:11px;color:var(--text2)}
+.mr-section{padding:12px 13px;border-top:.5px solid var(--border)}
+.mr-section-title{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+/* Recommend card */
+.rec-card{border-radius:10px;border:.5px solid var(--border);overflow:hidden;margin-bottom:8px}
+.rec-hdr{padding:10px 12px;display:flex;align-items:center;gap:8px}
+.rec-ic{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.rec-name{font-size:13px;font-weight:700;color:var(--text)}
+.rec-cat{font-size:10px;color:var(--text2);margin-top:1px}
+.rec-right{text-align:right;flex-shrink:0}
+.rec-target{font-size:12px;font-weight:700;color:var(--up)}
+.rec-stop{font-size:10px;color:var(--dn);margin-top:1px}
+.rec-body{padding:8px 12px 10px;border-top:.5px solid var(--border);font-size:11px;color:var(--text2);line-height:1.6;background:var(--bg2)}
+.rec-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+/* Review item */
+.rev-item{display:flex;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border)}
+.rev-item:last-child{border-bottom:none}
+.rev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rev-text{font-size:12px;color:var(--text2);line-height:1.5;flex:1}
+/* Position adj */
+.adj-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--border)}
+.adj-row:last-child{border-bottom:none}
+.adj-name{font-size:13px;font-weight:600;color:var(--text)}
+.adj-sub{font-size:10px;color:var(--text2);margin-top:1px}
+.adj-action{text-align:right}
+.adj-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px}
+.adj-price{font-size:10px;color:var(--text2);margin-top:2px}
+/* Target */
+.tgt-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--border);font-size:12px}
+.tgt-row:last-child{border-bottom:none}
+.tgt-label{color:var(--text2)}
+.tgt-val{font-weight:600;color:var(--text)}
+.tgt-val.up{color:var(--up)}.tgt-val.dn{color:var(--dn)}
+/* Buttons */
+.bbtn{width:100%;padding:12px;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;border:.5px solid var(--blueborder);background:var(--bluebg);color:var(--blue);font-family:inherit}
+.bbtn:active{opacity:.8}
+.pbtn{width:100%;padding:12px;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;border:.5px solid #a5b4fc;background:var(--p-bg);color:var(--p-c);font-family:inherit}
+.pbtn:active{opacity:.8}
+.gbtn{width:100%;padding:10px;font-size:12px;cursor:pointer;border-radius:10px;border:.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit}
+.gbtn:active{background:var(--bg2)}
+/* Settings */
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border-top:.5px solid var(--border)}
+.setrow:first-child{border-top:none}
+.setl h4{font-size:12px;font-weight:600;color:var(--text)}
+.setl p{font-size:10px;color:var(--text2);margin-top:1px}
+input[type=time],input[type=number]{font-size:12px;padding:5px 8px;border:.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--text);width:92px;font-family:inherit;-webkit-appearance:none;outline:none}
+input[type=password],input[type=text]{font-size:12px;padding:5px 8px;border:.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--text);width:150px;font-family:inherit;-webkit-appearance:none;outline:none}
+.empty{text-align:center;padding:20px;color:var(--text2);font-size:12px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--text2);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.row-hdr{padding:6px 13px 2px;display:flex;align-items:center}
+.alert-bar{background:var(--r-bg);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--r-c);line-height:1.6;display:none}
+.info-bar{background:var(--bluebg);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--blue);line-height:1.6}
+.mr-loading{text-align:center;padding:30px 20px;color:var(--text2);font-size:13px;line-height:2}
+.mr-empty{text-align:center;padding:30px 20px}
+.mr-empty i{font-size:36px;color:var(--text3);margin-bottom:10px;display:block}
+.mr-empty p{font-size:13px;color:var(--text2);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="hdr">
+  <div class="logo"><i class="fa-solid fa-chart-candlestick"></i></div>
+  <div class="htitle"><h1>投資助理</h1><p id="hs">NT$300萬 · 6/24 進場</p></div>
+  <div class="fxt">
+    <button class="fxb on" id="btw" onclick="sFx('TWD')">TWD</button>
+    <button class="fxb" id="bud" onclick="sFx('USD')">USD</button>
+  </div>
+  <button class="hbtn" onclick="fPrices()" title="更新報價"><i class="fa-solid fa-rotate" id="ri"></i></button>
+</div>
+
+<!-- 持倉 -->
+<div class="pg" id="pg-portfolio">
+  <div class="hero">
+    <div style="font-size:10px;color:var(--text2);margin-bottom:3px">未實現損益</div>
+    <div class="hero-pnl neu" id="hp">—</div>
+    <div style="font-size:10px;color:var(--text2);margin-top:4px">投入 <span id="hc">--</span>&emsp;匯率 <span id="hf">--</span></div>
+  </div>
+  <div class="g2">
+    <div class="met"><div class="ml">台股損益</div><div class="mv" id="twp">--</div></div>
+    <div class="met"><div class="ml">美股損益(換算)</div><div class="mv" id="usp">--</div></div>
+  </div>
+  <div class="lbl">類別損益</div>
+  <div class="csg" id="csum"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="lbl" style="margin-bottom:0">持倉明細</div>
+    <div class="vtg">
+      <button class="vb on" id="vs" onclick="sView('s')">個股</button>
+      <button class="vb" id="vc" onclick="sView('c')">依類別</button>
+    </div>
+  </div>
+  <div class="card" id="sv"></div>
+</div>
+
+<!-- 停損 -->
+<div class="pg" id="pg-stops" style="display:none">
+  <div class="lbl">停損監控</div>
+  <div class="card">
+    <div style="display:flex;gap:12px;padding:9px 13px 5px">
+      <span style="font-size:10px;color:var(--text2)"><span class="stdot str2" style="display:inline-block;vertical-align:middle;margin-right:3px;width:8px;height:8px;border-radius:50%"></span>已觸發</span>
+      <span style="font-size:10px;color:var(--text2)"><span class="stdot sty2" style="display:inline-block;vertical-align:middle;margin-right:3px;width:8px;height:8px;border-radius:50%"></span>&lt;3%</span>
+      <span style="font-size:10px;color:var(--text2)"><span class="stdot stg2" style="display:inline-block;vertical-align:middle;margin-right:3px;width:8px;height:8px;border-radius:50%"></span>安全</span>
+    </div>
+    <div id="stlist"></div>
+  </div>
+  <div id="stop-alerts" class="alert-bar"></div>
+  <div class="card" style="padding:12px 13px;font-size:11px;color:var(--text2);line-height:1.8"><strong style="color:var(--text)">放量收盤跌破</strong>才是真訊號。縮量跌破先觀察一天，再問自己「買進理由還在嗎」，理由消失才出場。</div>
+</div>
+
+<!-- 消息 -->
+<div class="pg" id="pg-news" style="display:none">
+  <div class="lbl">重要事件</div>
+  <div class="card" id="evlist"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 1px">
+    <div class="lbl" style="margin-bottom:0">即時消息</div>
+    <button class="gbtn" style="width:auto;padding:4px 10px;font-size:10px" onclick="fNews()"><i class="fa-solid fa-rotate"></i> 更新</button>
+  </div>
+  <div class="fsc">
+    <button class="fp on" onclick="sFilter(this,'all')">全部</button>
+    <button class="fp" onclick="sFilter(this,'power')">功率半導體</button>
+    <button class="fp" onclick="sFilter(this,'tsmc')">台積電</button>
+    <button class="fp" onclick="sFilter(this,'pcb')">PCB衛星</button>
+    <button class="fp" onclick="sFilter(this,'macro')">總經/Fed</button>
+  </div>
+  <div class="card" id="newslist"><div class="empty">點「更新」取得 AI 過濾後的消息</div></div>
+</div>
+
+<!-- AI 分析 -->
+<div class="pg" id="pg-ai" style="display:none">
+  <div class="ptg">
+    <button class="pb on" id="pai-quick" onclick="sAiTab('quick')">即時分析</button>
+    <button class="pb" id="pai-monthly" onclick="sAiTab('monthly')">月度報告</button>
+  </div>
+  <!-- 即時分析 -->
+  <div id="ai-quick">
+    <div class="card" style="padding:12px">
+      <div class="aimsg" id="aiout">點下方按鈕，AI 依最新報價分析持倉。</div>
+      <button class="bbtn" style="margin-top:8px" onclick="doAn()"><i class="fa-solid fa-brain"></i> 分析我的持倉</button>
+    </div>
+    <div class="lbl">快速提問</div>
+    <div class="card">
+      <button class="aiq" onclick="doQ('功率半導體近期催化劑？強茂、德微、ON哪檔最值得優先加碼？')"><div class="aiqic" style="background:var(--y-bg)"><i class="fa-solid fa-bolt" style="color:var(--y-c)"></i></div><div class="aiqt">功率半導體哪檔優先？</div><i class="fa-solid fa-chevron-right aiqc"></i></button>
+      <button class="aiq" onclick="doQ('台積電目前季線位置？升息環境下持倉風險評估。')"><div class="aiqic" style="background:var(--bluebg)"><i class="fa-solid fa-magnifying-glass" style="color:var(--blue)"></i></div><div class="aiqt">台積電季線風險評估</div><i class="fa-solid fa-chevron-right aiqc"></i></button>
+      <button class="aiq" onclick="doQ('TXN(7/22)和ON(7/28) Q2財報的800V看點是什麼？')"><div class="aiqic" style="background:var(--g-bg)"><i class="fa-solid fa-chart-line" style="color:var(--g-c)"></i></div><div class="aiqt">7月財報季重點</div><i class="fa-solid fa-chevron-right aiqc"></i></button>
+      <button class="aiq" onclick="doQ('上銀(2049)和台達電(2308)現在值得進場嗎？物理AI評估。')"><div class="aiqic" style="background:var(--p-bg)"><i class="fa-solid fa-robot" style="color:var(--p-c)"></i></div><div class="aiqt">物理 AI 台股評估</div><i class="fa-solid fa-chevron-right aiqc"></i></button>
+      <button class="aiq" onclick="doQ('升息環境下現在的停損策略需要調整嗎？')"><div class="aiqic" style="background:var(--r-bg)"><i class="fa-solid fa-shield-halved" style="color:var(--r-c)"></i></div><div class="aiqt">停損策略需要調整？</div><i class="fa-solid fa-chevron-right aiqc"></i></button>
+    </div>
+  </div>
+  <!-- 月度報告 -->
+  <div id="ai-monthly" style="display:none">
+    <div id="mr-content">
+      <div class="mr-empty">
+        <i class="fa-solid fa-calendar-check"></i>
+        <p>每月初產生一份投資月報<br>包含持倉檢討、新標的推薦<br>進退場時機與目標報酬</p>
+      </div>
+    </div>
+    <button class="pbtn" onclick="genMonthly()"><i class="fa-solid fa-wand-magic-sparkles"></i> 產生本月投資月報</button>
+    <p style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">月報會自動儲存，下次開啟直接讀取</p>
+  </div>
+</div>
+
+<!-- 月報獨立頁 -->
+<div class="pg" id="pg-monthly" style="display:none">
+  <div id="mr-main-content">
+    <div class="mr-empty">
+      <i class="fa-solid fa-calendar-check"></i>
+      <p>尚未產生月報<br>請到「AI」頁面產生本月投資月報</p>
+    </div>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div class="pg" id="pg-settings" style="display:none">
+  <div class="info-bar"><i class="fa-solid fa-circle-info"></i> 首次使用請先輸入 Anthropic API Key，所有 AI 功能才能正常運作。</div>
+  <div class="lbl">API 設定</div>
+  <div class="card">
+    <div class="setrow"><div class="setl"><h4>Anthropic API Key</h4><p>console.anthropic.com 取得</p></div><input type="password" id="apikey" placeholder="sk-ant-..."></div>
+    <div style="padding:8px 13px 12px;display:flex;gap:6px">
+      <button class="bbtn" style="flex:1" onclick="saveKey()">儲存 Key</button>
+      <button class="gbtn" style="flex:1" onclick="testKey()">測試連線</button>
+    </div>
+    <div id="key-status" style="padding:0 13px 10px;font-size:11px;color:var(--text2);display:none"></div>
+  </div>
+  <div class="lbl">每日提醒</div>
+  <div class="card">
+    <div class="setrow"><div class="setl"><h4>台股開盤提醒</h4><p>09:00 前提醒</p></div><input type="time" id="ttw" value="08:50"></div>
+    <div class="setrow"><div class="setl"><h4>美股開盤提醒</h4><p>21:30 前提醒</p></div><input type="time" id="tus" value="21:20"></div>
+    <div class="setrow"><div class="setl"><h4>停損自動檢查</h4><p>自動更新並偵測警報</p></div><input type="time" id="tst" value="10:00"></div>
+    <div style="padding:10px 13px"><button class="bbtn" onclick="saveR()">儲存提醒設定</button><div id="nm" style="font-size:10px;color:var(--text2);margin-top:5px;text-align:center"></div></div>
+  </div>
+  <div class="lbl">匯率設定</div>
+  <div class="card">
+    <div class="setrow"><div class="setl"><h4>手動覆蓋匯率</h4><p>更新報價時自動抓取</p></div><input type="number" id="mfx" placeholder="32.5" step="0.1"></div>
+    <div style="padding:8px 13px 12px"><button class="gbtn" onclick="apFx()">套用匯率</button></div>
+  </div>
+  <div class="lbl">關於</div>
+  <div class="card" style="padding:12px 13px;font-size:11px;color:var(--text2);line-height:2">
+    投資助理 v5.1 &nbsp;·&nbsp; 手機獨立版<br>台股 7 檔 + 美股 5 檔 &nbsp;·&nbsp; NT$300 萬<br>功率半導體 · 台積電 · PCB衛星 · 月度報告
+  </div>
+</div>
+
+<!-- Bottom Nav — 6 tabs -->
+<div class="bnav">
+  <button class="nb on" id="nb-portfolio" onclick="gTab('portfolio')"><i class="fa-solid fa-chart-pie"></i><span>持倉</span></button>
+  <button class="nb" id="nb-stops" onclick="gTab('stops')"><i class="fa-solid fa-shield-halved"></i><span>停損</span></button>
+  <button class="nb" id="nb-news" onclick="gTab('news')"><i class="fa-solid fa-bell"></i><span>消息</span></button>
+  <button class="nb" id="nb-ai" onclick="gTab('ai')"><i class="fa-solid fa-brain"></i><span>AI</span></button>
+  <button class="nb" id="nb-monthly" onclick="gTab('monthly')"><i class="fa-solid fa-calendar-check"></i><span>月報</span></button>
+  <button class="nb" id="nb-settings" onclick="gTab('settings')"><i class="fa-solid fa-gear"></i><span>設定</span></button>
+</div>
+</div>
+
+<script>
+var CATS={
+  foundry:{n:'半導體製造',s:'晶圓代工',c:'#7F77DD',b:'#EEEDFE',d:'#7F77DD'},
+  power:{n:'功率半導體',s:'功率半導體',c:'#BA7517',b:'#FAEEDA',d:'#EF9F27'},
+  pcb:{n:'PCB・衛星',s:'PCB・衛星',c:'#1D9E75',b:'#E1F5EE',d:'#1D9E75'},
+  aviation:{n:'航空',s:'油價受惠',c:'#378ADD',b:'#E6F1FB',d:'#378ADD'},
+  etf:{n:'大盤 ETF',s:'S&P500 ETF',c:'#3B6D11',b:'#EAF3DE',d:'#639922'},
+  power_us:{n:'美股功率',s:'美股功率半導體',c:'#D85A30',b:'#FAECE7',d:'#D85A30'}
+};
+var STOCKS={
+  tw:[
+    {id:'2330',n:'台積電',cost:2310,qty:26,stop:2050,ic:'積',cat:'foundry',sub:'AI CoWoS・晶圓代工'},
+    {id:'2481',n:'強茂',cost:150,qty:1333,stop:135,ic:'強',cat:'power',sub:'MOSFET・安世轉單'},
+    {id:'3675',n:'德微',cost:370,qty:324,stop:333,ic:'德',cat:'power',sub:'整流二極體・800V'},
+    {id:'8261',n:'富鼎',cost:200,qty:400,stop:180,ic:'富',cat:'power',sub:'高壓伺服器電源'},
+    {id:'6411',n:'晶焱',cost:270,qty:185,stop:238,ic:'晶',cat:'power',sub:'ESD/TVS保護元件'},
+    {id:'2313',n:'華通',cost:235,qty:638,stop:211,ic:'華',cat:'pcb',sub:'星鏈太空板市占90%'},
+    {id:'2618',n:'長榮航',cost:39,qty:3846,stop:35,ic:'榮',cat:'aviation',sub:'油價下跌受惠'}
+  ],
+  us:[
+    {id:'VOO',n:'VOO',cost:558,qty:53,stop:513,ic:'V',cat:'etf',sub:'S&P 500 大盤指數'},
+    {id:'TXN',n:'TXN',cost:210,qty:214,stop:189,ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
+    {id:'ON',n:'ON',cost:115,qty:1304,stop:103,ic:'O',cat:'power_us',sub:'SiC・$115K/機櫃'},
+    {id:'MPWR',n:'MPWR',cost:1565,qty:6,stop:1377,ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
+    {id:'VICR',n:'VICR',cost:71,qty:704,stop:62,ic:'Vi',cat:'power_us',sub:'800V純玩家'}
+  ]
+};
+var EVENTS=[
+  {m:'6月',d:'24',t:'進場日',desc:'核心部位進場：台積電+功率半導體+VOO+TXN',lv:'high'},
+  {m:'7月',d:'1',t:'TXN漲價生效',desc:'德儀調漲PMIC/MOSFET，台廠受惠確認',lv:'med'},
+  {m:'7月',d:'中',t:'台積電法說',desc:'AI CoWoS產能與下半年指引',lv:'high'},
+  {m:'7月',d:'22',t:'TXN Q2財報',desc:'800V漲價效益入帳，關鍵催化劑',lv:'high'},
+  {m:'7月',d:'28',t:'ON Q2財報',desc:'$115K/機櫃邏輯驗證，下半年展望',lv:'high'},
+  {m:'7月',d:'29-30',t:'FOMC會議',desc:'下一次Fed決議，注意升息訊號',lv:'high'},
+  {m:'8月',d:'中',t:'強茂/德微半年報',desc:'台廠漲價效益落地，決定是否加碼',lv:'med'},
+  {m:'8月',d:'中',t:'SpaceX季報',desc:'SPCX首次季報，華通PCB訂單驗證',lv:'med'}
+];
+var P={},fx=32.5,fxM='TWD',vM='s',flt='all',newsData=[],timers=[],mrData=null;
+var ALL=STOCKS.tw.concat(STOCKS.us);
+
+function getKey(){return localStorage.getItem('apikey')||'';}
+function gTab(t){
+  ['portfolio','stops','news','ai','monthly','settings'].forEach(function(x){
+    document.getElementById('pg-'+x).style.display=x===t?'flex':'none';
+    document.getElementById('nb-'+x).classList.toggle('on',x===t);
+  });
+  document.getElementById('pg-'+t).scrollTop=0;
+  if(t==='news') rEvts();
+  if(t==='monthly') rMonthlyPage();
+}
+function sFx(m){fxM=m;document.getElementById('btw').classList.toggle('on',m==='TWD');document.getElementById('bud').classList.toggle('on',m==='USD');render();}
+function sView(v){vM=v;document.getElementById('vs').classList.toggle('on',v==='s');document.getElementById('vc').classList.toggle('on',v==='c');rStocks();}
+function sAiTab(t){
+  document.getElementById('ai-quick').style.display=t==='quick'?'contents':'none';
+  document.getElementById('ai-monthly').style.display=t==='monthly'?'contents':'none';
+  document.getElementById('pai-quick').classList.toggle('on',t==='quick');
+  document.getElementById('pai-monthly').classList.toggle('on',t==='monthly');
+}
+function fV(n){
+  if(fxM==='USD'){var v=n/fx;return(v>=0?'':'−')+'$'+Math.round(Math.abs(v)).toLocaleString();}
+  var w=n/10000;return(n>=0?'':'−')+'NT$'+(Math.abs(w)>=1?Math.abs(w).toFixed(1)+'萬':Math.round(Math.abs(n)).toLocaleString());
+}
+function pct(p,c){return(p>=c?'+':'')+((p-c)/c*100).toFixed(1)+'%'}
+function alrt(s){var p=P[s.id];if(!p)return null;if(p<=s.stop)return'r';if((p-s.stop)/p<0.03)return'y';return'g';}
+function isUS(s){return STOCKS.us.indexOf(s)>-1;}
+function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
+function cStats(){
+  var r={};
+  ALL.forEach(function(s){
+    var p=P[s.id];
+    if(!r[s.cat])r[s.cat]={pnl:0,has:false,cnt:0};
+    r[s.cat].cnt++;
+    if(p){r[s.cat].pnl+=ntd(s,p);r[s.cat].has=true;}
+  });
+  return r;
+}
+function render(){
+  var twC=0,usC=0,twP=0,usP=0,has=Object.keys(P).length>0;
+  STOCKS.tw.forEach(function(s){var p=P[s.id];twC+=s.cost*s.qty;if(p)twP+=ntd(s,p);});
+  STOCKS.us.forEach(function(s){var p=P[s.id];usC+=s.cost*s.qty*fx;if(p)usP+=ntd(s,p);});
+  document.getElementById('hc').textContent=fV(twC+usC);
+  document.getElementById('hf').textContent=fx.toFixed(2)+' TWD/USD';
+  if(has){
+    var h=document.getElementById('hp'),t=twP+usP;
+    h.textContent=(t>=0?'+':'')+fV(t);h.className='hero-pnl '+(t>0?'up':t<0?'dn':'neu');
+    var tw=document.getElementById('twp'),us=document.getElementById('usp');
+    tw.textContent=(twP>=0?'+':'')+fV(twP);tw.className='mv '+(twP>=0?'up':'dn');
+    us.textContent=(usP>=0?'+':'')+fV(usP);us.className='mv '+(usP>=0?'up':'dn');
+  }
+  rCatSum();rStocks();rStops();
+}
+function rCatSum(){
+  var st=cStats(),ord=['foundry','power','pcb','power_us','etf','aviation'];
+  document.getElementById('csum').innerHTML=ord.map(function(k){
+    var c=CATS[k],s=st[k]||{pnl:0,has:false};
+    var ps=s.has?(s.pnl>=0?'+':'')+fV(s.pnl):'—',pc=s.has?(s.pnl>=0?'up':'dn'):'neu';
+    return '<div class="cscard" style="background:'+c.b+'"><div class="csh"><div class="csdot" style="background:'+c.d+'"></div><div class="csname" style="color:'+c.c+'">'+c.s+'</div></div><div class="cspnl '+pc+'">'+ps+'</div></div>';
+  }).join('');
+}
+function sRow(s,inCat){
+  var p=P[s.id],iu=isUS(s),c=CATS[s.cat];
+  var pr=p?(iu?'$'+p.toFixed(2):'NT$'+p.toLocaleString()):'—';
+  var pnlH='',alH='';
+  if(p){
+    var pn=ntd(s,p);
+    pnlH='<div class="spnl '+(pn>=0?'up':'dn')+'">'+pct(p,s.cost)+'</div>';
+    var a=alrt(s);
+    if(a==='r')alH='<div style="display:flex;justify-content:flex-end;margin-top:2px"><span class="tag tr"><i class="fa-solid fa-triangle-exclamation"></i>停損</span></div>';
+    else if(a==='y')alH='<div style="display:flex;justify-content:flex-end;margin-top:2px"><span class="tag ty">接近</span></div>';
+    else alH='<div style="display:flex;justify-content:flex-end;margin-top:2px"><span class="tag tg">安全</span></div>';
+  }
+  var meta=inCat?'<div class="ssubc">'+s.sub+'</div>':'<div class="smeta"><span class="tag" style="background:'+c.b+';color:'+c.c+'">'+c.s+'</span><span class="ssub">'+s.sub+'</span></div>';
+  return '<div class="srow"><div class="sic" style="background:'+c.b+';color:'+c.c+'">'+s.ic+'</div><div class="smid"><div class="sname">'+s.n+'</div>'+meta+'</div><div class="sright"><div class="sprice">'+pr+'</div>'+pnlH+alH+'</div></div>';
+}
+function rStocks(){
+  var el=document.getElementById('sv');
+  if(vM==='s'){
+    el.innerHTML='<div class="row-hdr"><span class="lbl">台股</span></div>'+STOCKS.tw.map(function(s){return sRow(s,false)}).join('')+'<div class="row-hdr" style="border-top:.5px solid var(--border)"><span class="lbl">美股</span></div>'+STOCKS.us.map(function(s){return sRow(s,false)}).join('');
+  } else {
+    var ord=['foundry','power','pcb','power_us','etf','aviation'],html='',st=cStats();
+    ord.forEach(function(k){
+      var c=CATS[k],grp=ALL.filter(function(s){return s.cat===k});
+      if(!grp.length)return;
+      var s=st[k]||{pnl:0,has:false,cnt:0};
+      var ps=s.has?(s.pnl>=0?'+':'')+fV(s.pnl):'—',pc=s.has?(s.pnl>=0?'up':'dn'):'neu';
+      html+='<div class="cghdr" style="background:'+c.b+'"><div class="cgdot" style="background:'+c.d+'"></div><div class="cgname" style="color:'+c.c+'">'+c.n+'</div><div class="cgright"><span class="cgcnt">'+grp.length+'檔</span><span class="cgpnl '+pc+'">'+ps+'</span></div></div>';
+      html+=grp.map(function(s){return sRow(s,true)}).join('');
+    });
+    el.innerHTML=html;
+  }
+}
+function rStops(){
+  var hits=[];
+  document.getElementById('stlist').innerHTML=ALL.map(function(s){
+    var p=P[s.id],iu=isUS(s),c=CATS[s.cat];
+    var dc='stx',dH='<span style="font-size:10px;color:var(--text2)">待更新</span>',bP=0,bC='var(--border2)';
+    if(p){
+      var a=alrt(s),ts=Math.max(0,(p-s.stop)/p*100);
+      bP=Math.min(100,ts/20*100);
+      if(a==='r'){dc='str2';dH='<span class="tag tr">已觸發</span>';bP=0;bC='#E24B4A';hits.push(s.n);}
+      else if(a==='y'){dc='sty2';dH='<span class="tag ty">−'+ts.toFixed(1)+'%</span>';bC='#EF9F27';}
+      else{dc='stg2';dH='<span class="tag tg">−'+ts.toFixed(1)+'%</span>';bC='#639922';}
+    }
+    return '<div class="stitem"><div class="stdot '+dc+'"></div><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:5px;overflow:hidden;min-width:0"><span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap">'+s.n+'</span><span class="tag" style="background:'+c.b+';color:'+c.c+';flex-shrink:0">'+c.s+'</span></div>'+dH+'</div><div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%">'+s.sub+'</span><span style="font-size:10px;color:var(--text2);flex-shrink:0">停損 '+(iu?'$':'NT$')+s.stop+'</span></div><div class="stbar"><div class="stfill" style="width:'+bP+'%;background:'+bC+'"></div></div></div></div>';
+  }).join('');
+  var ab=document.getElementById('stop-alerts');
+  if(hits.length){ab.style.display='block';ab.textContent='⚠️ 停損警報：'+hits.join('、')+' 已觸發，請確認是否放量跌破。';}
+  else ab.style.display='none';
+}
+function rEvts(){
+  var lv={high:'<span class="tag tr">重要</span>',med:'<span class="tag ty">關注</span>'};
+  document.getElementById('evlist').innerHTML=EVENTS.map(function(e){
+    return '<div class="evi"><div class="evdc"><div class="evm">'+e.m+'</div><div class="evd">'+e.d+'</div></div><div style="flex:1"><div style="display:flex;align-items:center;gap:5px;margin-bottom:2px"><span style="font-size:12px;font-weight:600;color:var(--text)">'+e.t+'</span>'+lv[e.lv]+'</div><div style="font-size:10px;color:var(--text2);line-height:1.5">'+e.desc+'</div></div></div>';
+  }).join('');
+}
+function sFilter(btn,f){flt=f;document.querySelectorAll('.fp').forEach(function(b){b.classList.remove('on')});btn.classList.add('on');rNews();}
+function rNews(){
+  var el=document.getElementById('newslist');
+  if(!newsData.length){el.innerHTML='<div class="empty">點「更新」取得 AI 過濾後的消息</div>';return;}
+  var list=flt==='all'?newsData:newsData.filter(function(n){return n.tags&&n.tags.some(function(t){return t===flt||(t==='satellite'&&flt==='pcb');});});
+  if(!list.length){el.innerHTML='<div class="empty">此分類暫無消息</div>';return;}
+  var rm={high:'<span class="tag tr">直接影響</span>',med:'<span class="tag ty">間接相關</span>',low:'<span class="tag tb">背景</span>'};
+  el.innerHTML=list.map(function(n){return '<div class="ni"><div style="display:flex;gap:5px;align-items:flex-start;margin-bottom:4px">'+(rm[n.rel||'low'])+'<div class="ntitle" style="flex:1">'+n.title+'</div></div><div class="nbody">'+n.body+'</div>'+(n.impact?'<div class="nimp">💡 '+n.impact+'</div>':'')+'</div>';}).join('');
+}
+
+/* ── 月報相關 ── */
+function buildMrPrompt(){
+  var now=new Date();
+  var mo=(now.getMonth()+1)+'月';
+  var sum=bSum();
+  return '你是我的專業投資顧問助理。今天是2026年'+mo+'，請搜尋最新市場資訊後，為我產生本月投資月報。\n\n'+sum+'\n\n請以JSON格式回傳月報（只輸出JSON，不含其他文字）：\n{\n  "month":"2026年'+mo+'",\n  "theme":"本月投資主題一句話",\n  "risk_score":7,\n  "target_return":"1.5-2.0%",\n  "target_amount":"45,000-60,000",\n  "reviews":[\n    {"type":"good","text":"上月操作正確的地方"},\n    {"type":"bad","text":"需要改進的地方"},\n    {"type":"note","text":"重要觀察"}\n  ],\n  "recommendations":[\n    {\n      "name":"標的名稱",\n      "code":"股票代號",\n      "cat":"分類(台股功率半導體/美股/大盤ETF等)",\n      "color":"#BA7517",\n      "bg":"#FAEEDA",\n      "ic":"圖示文字2字",\n      "entry":"進場價格區間(如NT$145-155或$208-215)",\n      "target":"目標價(如NT$200或$250)",\n      "stop":"停損價(如NT$135或$190)",\n      "horizon":"持有期間(如1-2個月)",\n      "reason":"推薦理由30字內",\n      "risk":"主要風險20字內",\n      "tags":["功率半導體","800V"]\n    }\n  ],\n  "adjustments":[\n    {\n      "name":"現有持倉名稱",\n      "action":"加碼/減碼/持有/出場",\n      "action_color":"#16a34a",\n      "action_bg":"#EAF3DE",\n      "price":"建議價格區間",\n      "reason":"理由20字"\n    }\n  ],\n  "key_dates":[\n    {"date":"7/22","event":"TXN財報","importance":"high"}\n  ],\n  "summary":"本月總結2-3句"\n}\n推薦2-3個新標的，現有持倉調整建議3-4項，key_dates列出本月最重要的3-4個日期。';
+}
+function renderMrHtml(d){
+  if(!d) return '';
+  var adjColor={
+    '加碼':'background:var(--g-bg);color:var(--g-c)',
+    '減碼':'background:var(--y-bg);color:var(--y-c)',
+    '持有':'background:var(--bluebg);color:var(--blue)',
+    '出場':'background:var(--r-bg);color:var(--r-c)'
+  };
+  var lvTag={high:'<span class="tag tr">重要</span>',med:'<span class="tag ty">關注</span>',low:'<span class="tag tb">注意</span>'};
+  var revIcon={'good':'<i class="fa-solid fa-circle-check" style="color:var(--g-c)"></i>','bad':'<i class="fa-solid fa-circle-xmark" style="color:var(--r-c)"></i>','note':'<i class="fa-solid fa-circle-info" style="color:var(--blue)"></i>'};
+
+  var recs=(d.recommendations||[]).map(function(r){
+    var tags=(r.tags||[]).map(function(t){return '<span class="tag tp">'+t+'</span>';}).join('');
+    return '<div class="rec-card"><div class="rec-hdr"><div class="rec-ic" style="background:'+(r.bg||'#FAEEDA')+';color:'+(r.color||'#BA7517')+'">'+(r.ic||r.name.slice(0,2))+'</div><div style="flex:1;min-width:0"><div class="rec-name">'+r.name+(r.code?' <span style="font-size:10px;color:var(--text2)">('+r.code+')</span>':'')+'</div><div class="rec-cat">'+(r.cat||'')+(r.horizon?' · 預計'+r.horizon:'')+'</div></div><div class="rec-right"><div class="rec-target">目標 '+(r.target||'--')+'</div><div class="rec-stop">停損 '+(r.stop||'--')+'</div></div></div><div class="rec-body">進場：<strong>'+(r.entry||'--')+'</strong><br>理由：'+(r.reason||'')+'<br>風險：'+(r.risk||'')+'<div class="rec-tags">'+tags+'</div></div></div>';
+  }).join('');
+
+  var adjs=(d.adjustments||[]).map(function(a){
+    var st=adjColor[a.action]||'background:var(--bg2);color:var(--text2)';
+    return '<div class="adj-row"><div><div class="adj-name">'+a.name+'</div><div class="adj-sub">'+(a.reason||'')+'</div></div><div class="adj-action"><div class="adj-tag" style="'+st+'">'+a.action+'</div><div class="adj-price">'+(a.price||'')+'</div></div></div>';
+  }).join('');
+
+  var dates=(d.key_dates||[]).map(function(k){
+    return '<div class="evi"><div class="evdc"><div class="evm" style="font-size:8px">日期</div><div class="evd" style="font-size:13px">'+k.date+'</div></div><div style="flex:1"><div style="display:flex;align-items:center;gap:5px"><span style="font-size:12px;font-weight:600;color:var(--text)">'+k.event+'</span>'+(lvTag[k.importance]||'')+'</div></div></div>';
+  }).join('');
+
+  var revs=(d.reviews||[]).map(function(r){
+    return '<div class="rev-item"><div style="margin-top:3px">'+(revIcon[r.type]||'')+'</div><div class="rev-text">'+r.text+'</div></div>';
+  }).join('');
+
+  return '<div class="mr-header"><div class="mr-title"><i class="fa-solid fa-calendar-check"></i> '+d.month+'投資月報</div><div class="mr-sub">主題：'+(d.theme||'')+'</div></div>'+
+    '<div class="card"><div class="mr-section"><div class="mr-section-title">月度目標</div><div class="tgt-row"><span class="tgt-label">風險評分</span><span class="tgt-val">'+(d.risk_score||'--')+'/10</span></div><div class="tgt-row"><span class="tgt-label">目標月報酬</span><span class="tgt-val up">'+(d.target_return||'--')+'</span></div><div class="tgt-row"><span class="tgt-label">目標金額</span><span class="tgt-val up">NT$'+(d.target_amount||'--')+'</span></div></div><div class="mr-section"><div class="mr-section-title">持倉檢討</div>'+revs+'</div></div>'+
+    '<div class="lbl">本月推薦標的</div>'+recs+
+    '<div class="lbl">現有持倉調整</div><div class="card"><div style="padding:4px 13px">'+adjs+'</div></div>'+
+    '<div class="lbl">本月關鍵日期</div><div class="card">'+dates+'</div>'+
+    '<div class="card" style="padding:12px 13px"><div class="mr-section-title" style="margin-bottom:6px">月度總結</div><div style="font-size:12px;color:var(--text2);line-height:1.7">'+(d.summary||'')+'</div></div>';
+}
+function rMonthlyPage(){
+  var el=document.getElementById('mr-main-content');
+  if(mrData){el.innerHTML=renderMrHtml(mrData);}
+  else{
+    var saved=localStorage.getItem('monthlyReport');
+    if(saved){try{mrData=JSON.parse(saved);el.innerHTML=renderMrHtml(mrData);}catch(e){}}
+  }
+}
+async function genMonthly(){
+  var key=getKey();
+  if(!key){alert('請先在「設定」頁輸入 Anthropic API Key');gTab('settings');return;}
+  var btns=document.querySelectorAll('[onclick="genMonthly()"]');
+  btns.forEach(function(b){b.disabled=true;b.innerHTML='<span class="spin"></span>AI 搜尋並分析市場中，約需30秒...';});
+  var containers=['mr-content','mr-main-content'];
+  containers.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.innerHTML='<div class="mr-loading"><span class="spin"></span><br>搜尋最新市場資訊<br>分析持倉狀況<br>生成月度報告中...</div>';
+  });
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:3000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:buildMrPrompt()}]})});
+    if(!r.ok){var e=await r.json();throw new Error(e.error&&e.error.message||'API錯誤');}
+    var d=await r.json();
+    var txt=d.content.map(function(c){return c.type==='text'?c.text:''}).join('');
+    var m=txt.match(/\{[\s\S]*\}/);
+    if(m){
+      mrData=JSON.parse(m[0]);
+      localStorage.setItem('monthlyReport',JSON.stringify(mrData));
+      var html=renderMrHtml(mrData);
+      containers.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=html;});
+    } else {
+      throw new Error('JSON解析失敗');
+    }
+  }catch(e){
+    var errHtml='<div class="empty">產生失敗：'+e.message+'<br>請確認 API Key 正確並重試</div>';
+    containers.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=errHtml;});
+  }
+  btns.forEach(function(b){b.disabled=false;b.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> 重新產生月報';});
+}
+
+/* ── API & 共用 ── */
+async function apiCall(payload){
+  var key=getKey();
+  if(!key){alert('請先在「設定」頁輸入 Anthropic API Key');gTab('settings');throw new Error('no key');}
+  var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(payload)});
+  if(!r.ok){var e=await r.json();throw new Error(e.error&&e.error.message||'API錯誤 '+r.status);}
+  return r.json();
+}
+async function fNews(){
+  document.getElementById('newslist').innerHTML='<div class="empty"><span class="spin"></span>AI 搜尋並過濾中...</div>';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1500,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'你是投資助理，搜尋今日最新消息，只回傳JSON陣列（5-8則）：\n[{"title":"標題20字","body":"重點40字","impact":"對持倉影響20字","rel":"high/med/low","tags":["power"/"tsmc"/"pcb"/"satellite"/"macro"]}]\n持倉：台積電、強茂/德微/富鼎/晶焱(功率半導體)、華通(PCB星鏈)、長榮航、VOO、TXN/ON/MPWR/VICR(美股功率)。只輸出JSON。'}]});
+    var txt=d.content.map(function(c){return c.type==='text'?c.text:''}).join(''),m=txt.match(/\[[\s\S]*\]/);
+    if(m){newsData=JSON.parse(m[0]);rNews();}
+    else document.getElementById('newslist').innerHTML='<div class="empty">解析失敗，請重試</div>';
+  }catch(e){if(e.message!=='no key')document.getElementById('newslist').innerHTML='<div class="empty">載入失敗：'+e.message+'</div>';}
+}
+async function fPrices(){
+  var ic=document.getElementById('ri');ic.className='fa-solid fa-rotate fa-spin';
+  document.getElementById('hs').textContent='更新中...';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:500,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'搜尋以下最新股價，只回傳JSON：{"2330":0,"2481":0,"3675":0,"8261":0,"6411":0,"2313":0,"2618":0,"VOO":0,"TXN":0,"ON":0,"MPWR":0,"VICR":0,"USDTWD":0}\n台股：台積電2330、強茂2481、德微3675、富鼎8261、晶焱6411、華通2313、長榮航2618\n美股：VOO、TXN、ON、MPWR、VICR\n只輸出JSON。'}]});
+    var txt=d.content.map(function(c){return c.type==='text'?c.text:''}).join(''),m=txt.match(/\{[\s\S]*\}/);
+    if(m){
+      var psd=JSON.parse(m[0]);
+      if(psd.USDTWD){fx=parseFloat(psd.USDTWD);delete psd.USDTWD;}
+      Object.assign(P,psd);
+      var now=new Date();
+      document.getElementById('hs').textContent='更新於 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+'　匯率 '+fx.toFixed(2);
+      render();chkAlerts();
+      localStorage.setItem('lastPrices',JSON.stringify(P));
+      localStorage.setItem('lastFx',fx.toString());
+    } else document.getElementById('hs').textContent='更新失敗，請重試';
+  }catch(e){if(e.message!=='no key')document.getElementById('hs').textContent='更新失敗';}
+  ic.className='fa-solid fa-rotate';
+}
+function chkAlerts(){
+  var hit=ALL.filter(function(s){return P[s.id]&&P[s.id]<=s.stop});
+  if(hit.length&&'Notification'in window&&Notification.permission==='granted')
+    new Notification('⚠️ 停損警報',{body:hit.map(function(s){return s.n}).join('、')+' 已觸發停損'});
+}
+function bSum(){
+  var l=['【持倉摘要】台股：'];
+  STOCKS.tw.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本NT$'+s.cost+(p?' 現價NT$'+p+' '+pct(p,s.cost):'')+' 停損NT$'+s.stop);});
+  l.push('美股（匯率'+fx.toFixed(2)+'）：');
+  STOCKS.us.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本$'+s.cost+(p?' 現價$'+p+' '+pct(p,s.cost):'')+' 停損$'+s.stop);});
+  l.push('總資金300萬，6/24進場。7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
+  return l.join('\n');
+}
+async function doAn(){
+  gTab('ai');document.getElementById('aiout').textContent='分析中...';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1000,system:'你是專業台股投資助理。繁體中文，簡潔專業，不用markdown。',messages:[{role:'user',content:bSum()+'\n\n請分析：1)整體風險評分(1-10) 2)最需注意的3檔標的 3)7月財報前操作建議。每點2-3句。'}]});
+    document.getElementById('aiout').textContent=d.content&&d.content[0]?d.content[0].text:'無法取得回應';
+  }catch(e){if(e.message!=='no key')document.getElementById('aiout').textContent='連線失敗：'+e.message;}
+}
+async function doQ(q){
+  gTab('ai');document.getElementById('aiout').textContent='思考中...';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1000,system:'你是專業台股投資助理。繁體中文，簡潔專業，不用markdown。',messages:[{role:'user',content:bSum()+'\n\n'+q}]});
+    document.getElementById('aiout').textContent=d.content&&d.content[0]?d.content[0].text:'無法取得回應';
+  }catch(e){if(e.message!=='no key')document.getElementById('aiout').textContent='連線失敗：'+e.message;}
+}
+function saveKey(){
+  var k=document.getElementById('apikey').value.trim();
+  if(!k){alert('請輸入 API Key');return;}
+  localStorage.setItem('apikey',k);
+  var s=document.getElementById('key-status');s.style.display='block';s.textContent='✓ API Key 已儲存';s.style.color='var(--g-c)';
+}
+async function testKey(){
+  var s=document.getElementById('key-status');s.style.display='block';s.textContent='測試中...';s.style.color='var(--text2)';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:20,messages:[{role:'user',content:'回覆「連線成功」'}]});
+    s.textContent='✓ '+(d.content&&d.content[0]?d.content[0].text:'連線成功');s.style.color='var(--g-c)';
+  }catch(e){s.textContent='✗ '+e.message;s.style.color='var(--r-c)';}
+}
+function saveR(){
+  var tw=document.getElementById('ttw').value,us=document.getElementById('tus').value,st=document.getElementById('tst').value,nm=document.getElementById('nm');
+  if(!('Notification'in window)){nm.textContent='此瀏覽器不支援通知功能';return;}
+  Notification.requestPermission().then(function(p){
+    if(p==='granted'){
+      timers.forEach(clearInterval);timers=[];
+      function sc(t,label,auto){timers.push(setInterval(function(){var n=new Date(),cur=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');if(cur===t){new Notification('📊 '+label);if(auto)fPrices();}},60000));}
+      sc(tw,'台股即將開盤',false);sc(us,'美股即將開盤',false);sc(st,'停損自動檢查',true);
+      nm.textContent='✓ 台股 '+tw+'・美股 '+us+'・停損 '+st;
+      localStorage.setItem('rm',JSON.stringify({tw:tw,us:us,st:st}));
+    } else nm.textContent='請允許通知權限後再試';
+  });
+}
+function apFx(){var v=parseFloat(document.getElementById('mfx').value);if(v>0){fx=v;render();}}
+
+/* 初始化 */
+(function(){
+  var k=localStorage.getItem('apikey');if(k)document.getElementById('apikey').value=k;
+  var lp=localStorage.getItem('lastPrices');if(lp){try{Object.assign(P,JSON.parse(lp));}catch(e){}}
+  var lf=localStorage.getItem('lastFx');if(lf)fx=parseFloat(lf);
+  var rm=localStorage.getItem('rm');
+  if(rm){try{var rv=JSON.parse(rm);if(rv.tw)document.getElementById('ttw').value=rv.tw;if(rv.us)document.getElementById('tus').value=rv.us;if(rv.st)document.getElementById('tst').value=rv.st;}catch(e){}}
+  var mr=localStorage.getItem('monthlyReport');
+  if(mr){try{mrData=JSON.parse(mr);}catch(e){}}
+  if(!k){setTimeout(function(){gTab('settings');},300);}
+})();
+render();rEvts();
+</script>
+</body>
+</html>
