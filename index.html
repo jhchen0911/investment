@@ -394,6 +394,30 @@ var EVENTS=[
 var P={},fx=32.5,fxM='TWD',vM='s',flt='all',newsData=[],timers=[],mrData=null;
 var ALL=STOCKS.tw.concat(STOCKS.us);
 
+
+
+function calcStopPreview(s){
+  var iu=STOCKS.us.indexOf(s)>-1;
+  var st=iu?Math.round(s.cost*s.stopPct*100)/100:Math.round(s.cost*s.stopPct);
+  return (iu?'$':'NT$')+st;
+}
+function previewStop(id){
+  var s=ALL.find(function(x){return x.id===id;});
+  if(!s) return;
+  var c=parseFloat(document.getElementById('e-cost-'+id).value);
+  if(c>0){
+    var origCost=s.cost;
+    s.cost=c;
+    var el=document.getElementById('e-stop-'+id);
+    if(el) el.textContent=calcStopPreview(s);
+    s.cost=origCost;
+  }
+}
+function calcStop(s){
+  var stop = Math.round(s.cost * s.stopPct * (s.stopPct >= 0.9 ? 10 : 100)) / (s.stopPct >= 0.9 ? 10 : 100);
+  var iu = STOCKS.us.indexOf(s) > -1;
+  return iu ? Math.round(s.cost * s.stopPct * 100) / 100 : Math.round(s.cost * s.stopPct);
+}
 function getKey(){return localStorage.getItem('apikey')||'';}
 function gTab(t){
   ['portfolio','stops','news','ai','monthly','settings'].forEach(function(x){
@@ -417,7 +441,7 @@ function fV(n){
   var w=n/10000;return(n>=0?'':'−')+'NT$'+(Math.abs(w)>=1?Math.abs(w).toFixed(1)+'萬':Math.round(Math.abs(n)).toLocaleString());
 }
 function pct(p,c){return(p>=c?'+':'')+((p-c)/c*100).toFixed(1)+'%'}
-function alrt(s){var p=P[s.id];if(!p)return null;if(p<=s.stop)return'r';if((p-s.stop)/p<0.03)return'y';return'g';}
+function alrt(s){var p=P[s.id];if(!p)return null;var st=calcStop(s);if(p<=st)return'r';if((p-st)/p<0.03)return'y';return'g';}
 function isUS(s){return STOCKS.us.indexOf(s)>-1;}
 function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
 function cStats(){
@@ -490,8 +514,9 @@ function rStops(){
   document.getElementById('stlist').innerHTML=ALL.map(function(s){
     var p=P[s.id],iu=isUS(s),c=CATS[s.cat];
     var dc='stx',dH='<span style="font-size:10px;color:var(--text2)">待更新</span>',bP=0,bC='var(--border2)';
+    var st=calcStop(s);
     if(p){
-      var a=alrt(s),ts=Math.max(0,(p-s.stop)/p*100);
+      var a=alrt(s),ts=Math.max(0,(p-st)/p*100);
       bP=Math.min(100,ts/20*100);
       if(a==='r'){dc='str2';dH='<span class="tag tr">已觸發</span>';bP=0;bC='#E24B4A';hits.push(s.n);}
       else if(a==='y'){dc='sty2';dH='<span class="tag ty">−'+ts.toFixed(1)+'%</span>';bC='#EF9F27';}
@@ -644,9 +669,9 @@ function chkAlerts(){
 }
 function bSum(){
   var l=['【持倉摘要】台股：'];
-  STOCKS.tw.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本NT$'+s.cost+(p?' 現價NT$'+p+' '+pct(p,s.cost):'')+' 停損NT$'+s.stop);});
+  STOCKS.tw.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本NT$'+s.cost+(p?' 現價NT$'+p+' '+pct(p,s.cost):'')+' 停損NT$'+calcStop(s));});
   l.push('美股（匯率'+fx.toFixed(2)+'）：');
-  STOCKS.us.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本$'+s.cost+(p?' 現價$'+p+' '+pct(p,s.cost):'')+' 停損$'+s.stop);});
+  STOCKS.us.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本$'+s.cost+(p?' 現價$'+p+' '+pct(p,s.cost):'')+' 停損$'+calcStop(s));});
   l.push('7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
   return l.join('\n');
 }
