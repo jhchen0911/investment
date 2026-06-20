@@ -28,7 +28,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3)}
-.app{height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:var(--bg3)}
+.app{height:100svh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:var(--bg3)}
 .hdr{height:52px;background:var(--bg);border-bottom:.5px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0}
 .logo{width:30px;height:30px;border-radius:50%;background:var(--bluebg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo i{color:var(--blue);font-size:14px}
@@ -39,8 +39,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .fxb{padding:3px 7px;border-radius:6px;border:none;background:transparent;font-size:10px;cursor:pointer;color:var(--text2);font-family:inherit}
 .fxb.on{background:var(--bg);color:var(--blue);font-weight:600;box-shadow:0 0 0 .5px var(--border2)}
 .hbtn{width:30px;height:30px;border-radius:50%;border:.5px solid var(--border2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px;flex-shrink:0}
-.pg{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
-.pg::-webkit-scrollbar{display:none}
+.pg{flex:1;overflow-y:auto;padding:10px;display:block;-webkit-overflow-scrolling:touch}
+.pg::-webkit-scrollbar{display:none}.pg>*{margin-bottom:9px}
 /* Bottom nav — 6 tabs, smaller */
 .bnav{height:54px;background:var(--bg);border-top:.5px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:none;background:transparent;cursor:pointer;color:var(--text3);font-size:8px;font-family:inherit;padding:5px 0}
@@ -195,7 +195,7 @@ input[type=password],input[type=text]{font-size:12px;padding:5px 8px;border:.5px
 <div class="app">
 <div class="hdr">
   <div class="logo"><i class="fa-solid fa-chart-candlestick"></i></div>
-  <div class="htitle"><h1>投資助理</h1><p id="hs">NT$300萬 · 6/24 進場</p></div>
+  <div class="htitle"><h1>投資助理</h1><p id="hs">投資助理 v5.1</p></div>
   <div class="fxt">
     <button class="fxb on" id="btw" onclick="sFx('TWD')">TWD</button>
     <button class="fxb" id="bud" onclick="sFx('USD')">USD</button>
@@ -364,11 +364,11 @@ var STOCKS={
     {id:'2618',n:'長榮航',cost:39,qty:3846,stop:35,ic:'榮',cat:'aviation',sub:'油價下跌受惠'}
   ],
   us:[
-    {id:'VOO',n:'VOO',cost:558,qty:53,stop:513,ic:'V',cat:'etf',sub:'S&P 500 大盤指數'},
-    {id:'TXN',n:'TXN',cost:210,qty:214,stop:189,ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
-    {id:'ON',n:'ON',cost:115,qty:1304,stop:103,ic:'O',cat:'power_us',sub:'SiC・$115K/機櫃'},
-    {id:'MPWR',n:'MPWR',cost:1565,qty:6,stop:1377,ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
-    {id:'VICR',n:'VICR',cost:71,qty:704,stop:62,ic:'Vi',cat:'power_us',sub:'800V純玩家'}
+    {id:'VOO',n:'VOO',cost:558,qty:16,stop:513,ic:'V',cat:'etf',sub:'S&P 500 大盤指數'},
+    {id:'TXN',n:'TXN',cost:210,qty:66,stop:189,ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
+    {id:'ON',n:'ON',cost:115,qty:40,stop:103,ic:'O',cat:'power_us',sub:'SiC・$115K/機櫃'},
+    {id:'MPWR',n:'MPWR',cost:1565,qty:2,stop:1377,ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
+    {id:'VICR',n:'VICR',cost:71,qty:22,stop:62,ic:'Vi',cat:'power_us',sub:'800V純玩家'}
   ]
 };
 var EVENTS=[
@@ -637,7 +637,7 @@ function bSum(){
   STOCKS.tw.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本NT$'+s.cost+(p?' 現價NT$'+p+' '+pct(p,s.cost):'')+' 停損NT$'+s.stop);});
   l.push('美股（匯率'+fx.toFixed(2)+'）：');
   STOCKS.us.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本$'+s.cost+(p?' 現價$'+p+' '+pct(p,s.cost):'')+' 停損$'+s.stop);});
-  l.push('總資金300萬，6/24進場。7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
+  l.push('7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
   return l.join('\n');
 }
 async function doAn(){
