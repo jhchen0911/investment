@@ -40,7 +40,7 @@ html{height:-webkit-fill-available}body{height:100%;overflow:hidden;font-family:
 .fxb.on{background:var(--bg);color:var(--blue);font-weight:600;box-shadow:0 0 0 .5px var(--border2)}
 .hbtn{width:30px;height:30px;border-radius:50%;border:.5px solid var(--border2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px;flex-shrink:0}
 .pg{flex:1;min-height:0;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
-.pg::-webkit-scrollbar{display:none}
+.pg::-webkit-scrollbar{display:none}.pg{padding-bottom:calc(54px + env(safe-area-inset-bottom) + 10px)!important}
 /* Bottom nav — 6 tabs, smaller */
 .bnav{height:54px;background:var(--bg);border-top:.5px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:none;background:transparent;cursor:pointer;color:var(--text3);font-size:8px;font-family:inherit;padding:5px 0}
@@ -327,6 +327,16 @@ input[type=password],input[type=text]{font-size:12px;padding:5px 8px;border:.5px
     <div class="setrow"><div class="setl"><h4>手動覆蓋匯率</h4><p>更新報價時自動抓取</p></div><input type="number" id="mfx" placeholder="32.5" step="0.1"></div>
     <div style="padding:8px 13px 12px"><button class="gbtn" onclick="apFx()">套用匯率</button></div>
   </div>
+
+  <div class="lbl">持股設定</div>
+  <div class="card">
+    <div style="padding:10px 13px 6px;font-size:11px;color:var(--text2)">點擊各標的修改成本價、股數與停損價，儲存後立即生效。</div>
+    <div id="stock-edit-list"></div>
+    <div style="padding:10px 13px">
+      <button class="bbtn" onclick="saveStocks()">儲存持股設定</button>
+      <div id="stock-save-msg" style="font-size:10px;color:var(--text2);margin-top:5px;text-align:center"></div>
+    </div>
+  </div>
   <div class="lbl">關於</div>
   <div class="card" style="padding:12px 13px;font-size:11px;color:var(--text2);line-height:2">
     投資助理 v5.1 &nbsp;·&nbsp; 手機獨立版<br>台股 7 檔 + 美股 5 檔<br>功率半導體 · 台積電 · PCB衛星 · 月度報告
@@ -391,7 +401,7 @@ function gTab(t){
     document.getElementById('nb-'+x).classList.toggle('on',x===t);
   });
   document.getElementById('pg-'+t).scrollTop=0;
-  if(t==='news') rEvts();
+  if(t==='news') rEvts();if(t==='settings') renderStockEdit();
   if(t==='monthly') rMonthlyPage();
 }
 function sFx(m){fxM=m;document.getElementById('btw').classList.toggle('on',m==='TWD');document.getElementById('bud').classList.toggle('on',m==='USD');render();}
@@ -693,7 +703,7 @@ function apFx(){var v=parseFloat(document.getElementById('mfx').value);if(v>0){f
   if(mr){try{mrData=JSON.parse(mr);}catch(e){}}
   if(!k){setTimeout(function(){gTab('settings');},300);}
 })();
-render();rEvts();
+loadStockConfig();render();rEvts();renderStockEdit();
 </script>
 </body>
 </html>
