@@ -529,13 +529,13 @@ function rStops(){
   document.getElementById('stlist').innerHTML=ALL.map(function(s){
     var p=P[s.id],iu=isUS(s),c=CATS[s.cat];
     var dc='stx',dH='<span style="font-size:10px;color:var(--text2)">待更新</span>',bP=0,bC='var(--border2)';
-    var st=calcStop(s);
-    if(p){
+    if(p){var st=calcStop(s);
       var a=alrt(s),ts=Math.max(0,(p-st)/p*100);
       bP=Math.min(100,ts/20*100);
       if(a==='r'){dc='str2';dH='<span class="tag tr">已觸發</span>';bP=0;bC='#E24B4A';hits.push(s.n);}
       else if(a==='y'){dc='sty2';dH='<span class="tag ty">−'+ts.toFixed(1)+'%</span>';bC='#EF9F27';}
       else{dc='stg2';dH='<span class="tag tg">−'+ts.toFixed(1)+'%</span>';bC='#639922';}
+    }
     }
     return '<div class="stitem"><div class="stdot '+dc+'"></div><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:5px;overflow:hidden;min-width:0"><span style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap">'+s.n+'</span><span class="tag" style="background:'+c.b+';color:'+c.c+';flex-shrink:0">'+c.s+'</span></div>'+dH+'</div><div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%">'+s.sub+'</span><span style="font-size:10px;color:var(--text2);flex-shrink:0">停損 '+(iu?'$':'NT$')+s.stop+'</span></div><div class="stbar"><div class="stfill" style="width:'+bP+'%;background:'+bC+'"></div></div></div></div>';
   }).join('');
@@ -731,6 +731,84 @@ function saveR(){
   });
 }
 function apFx(){var v=parseFloat(document.getElementById('mfx').value);if(v>0){fx=v;render();}}
+
+
+// ── 持股設定相關函式 ──
+function calcStop(s){
+  var iu=STOCKS.us.indexOf(s)>-1;
+  var v=s.cost*s.stopPct;
+  return iu?Math.round(v*100)/100:Math.round(v);
+}
+function calcStopPreview(s){
+  var iu=STOCKS.us.indexOf(s)>-1;
+  return (iu?'$':'NT$')+calcStop(s);
+}
+function prvStop(inp,id){
+  var s=ALL.find(function(x){return x.id===id;});
+  if(!s)return;
+  var c=parseFloat(inp.value);
+  if(c>0){var old=s.cost;s.cost=c;var el=document.getElementById('es-'+id);if(el)el.textContent=calcStopPreview(s);s.cost=old;}
+}
+function renderStockEdit(){
+  function makeRow(s){
+    var iu=STOCKS.us.indexOf(s)>-1;
+    var c=CATS[s.cat];
+    var unit=iu?'$':'NT$';
+    var sv=calcStopPreview(s);
+    return '<div class="pos-item">'+
+      '<div class="pos-header">'+
+        '<div class="pos-ic" style="background:'+c.b+';color:'+c.c+'">'+s.ic+'</div>'+
+        '<div style="flex:1;margin-left:2px"><div class="pos-name">'+s.n+'</div></div>'+
+        '<span class="pos-cat tag" style="background:'+c.b+';color:'+c.c+'">'+c.s+'</span>'+
+      '</div>'+
+      '<div class="pos-fields">'+
+        '<div class="pos-field"><label>成本('+unit+')</label>'+
+          '<input type="number" inputmode="decimal" id="ec-'+s.id+'" value="'+s.cost+'" step="0.1" onchange="prvStop(this,&quot;'+s.id+'&quot;)"></div>'+
+        '<div class="pos-field"><label>股數</label>'+
+          '<input type="number" inputmode="numeric" id="eq-'+s.id+'" value="'+s.qty+'" step="1"></div>'+
+        '<div class="pos-field"><label style="color:var(--blue)">AI 停損</label>'+
+          '<div id="es-'+s.id+'" class="pos-stop">'+sv+'</div></div>'+
+      '</div>'+
+    '</div>';
+  }
+  var tw=document.getElementById('pos-tw');
+  var us=document.getElementById('pos-us');
+  if(tw)tw.innerHTML=STOCKS.tw.map(makeRow).join('');
+  if(us)us.innerHTML=STOCKS.us.map(makeRow).join('');
+}
+function saveStocks(){
+  ALL.forEach(function(s){
+    var ci=document.getElementById('ec-'+s.id);
+    var qi=document.getElementById('eq-'+s.id);
+    if(ci){var c=parseFloat(ci.value);if(c>0)s.cost=c;}
+    if(qi){var q=parseInt(qi.value);if(q>0)s.qty=q;}
+    var el=document.getElementById('es-'+s.id);
+    if(el)el.textContent=calcStopPreview(s);
+  });
+  localStorage.setItem('stockConfig',JSON.stringify(ALL.map(function(s){return{id:s.id,cost:s.cost,qty:s.qty};})));
+  render();
+  var msg=document.getElementById('stock-save-msg');
+  if(msg){msg.textContent='✓ 已儲存，損益即時更新';msg.style.color='var(--g-c)';setTimeout(function(){msg.textContent='';},3000);}
+}
+function loadStockConfig(){
+  var saved=localStorage.getItem('stockConfig');
+  if(!saved)return;
+  try{
+    var cfg=JSON.parse(saved);
+    cfg.forEach(function(c){
+      var s=ALL.find(function(x){return x.id===c.id;});
+      if(s){if(c.cost)s.cost=c.cost;if(c.qty)s.qty=c.qty;}
+    });
+  }catch(e){}
+}
+// ── alrt 使用動態停損 ──
+function alrt(s){
+  var p=P[s.id];if(!p)return null;
+  var st=calcStop(s);
+  if(p<=st)return'r';
+  if((p-st)/p<0.03)return'y';
+  return'g';
+}
 
 /* 初始化 */
 (function(){
