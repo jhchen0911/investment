@@ -721,3 +721,159 @@ async function fPrices(){
   ic.className='fa-solid fa-rotate';
 }
 
+
+async function fNews(){
+  document.getElementById('newslist').innerHTML='<div class="empty"><span class="spin"></span>AI 搜尋中...</div>';
+  var key=localStorage.getItem('apikey')||'';
+  if(!key){document.getElementById('newslist').innerHTML='<div class="empty">請先在設定頁輸入 API Key</div>';return;}
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'搜尋今日消息，只回傳JSON：[{"title":"20字","body":"40字","impact":"20字","rel":"high/med/low","tags":["power"]}]\n持倉：台積電、聯電、TXN、ON、MPWR、GOOGL、TSLA。只輸出JSON。'}]})});
+    var d=await r.json(),txt=d.content.map(function(c){return c.type==='text'?c.text:''}).join(''),m=txt.match(/\[[\s\S]*\]/);
+    if(m){newsData=JSON.parse(m[0]);rNews();}
+    else document.getElementById('newslist').innerHTML='<div class="empty">解析失敗</div>';
+  }catch(e){document.getElementById('newslist').innerHTML='<div class="empty">載入失敗：'+e.message+'</div>';}
+}
+function getKey(){return localStorage.getItem('apikey')||'';}
+async function apiCall(payload){
+  var key=getKey();
+  if(!key){gTab('settings');throw new Error('no key');}
+  var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(payload)});
+  if(!r.ok){var e=await r.json();throw new Error(e.error&&e.error.message||'API錯誤');}
+  return r.json();
+}
+function bSum(){
+  var l=['【持倉】台股：'];
+  STOCKS.tw.forEach(function(s){if(s.pending&&!P[s.id])return;var p=P[s.id];l.push('- '+s.n+' NT$'+s.cost+(p?' 現價NT$'+p:'')+' 停損NT$'+calcStop(s));});
+  l.push('美股（匯率'+fx.toFixed(2)+'）：');
+  STOCKS.us.forEach(function(s){if(s.pending&&!P[s.id])return;var p=P[s.id];l.push('- '+s.n+' $'+s.cost+(p?' 現價$'+p:'')+' 停損$'+calcStop(s));});
+  l.push('7月財報 TXN 7/22、ON 7/28、台積電法說是關鍵。');
+  return l.join('\n');
+}
+async function doAn(){
+  gTab('ai');document.getElementById('aiout').textContent='分析中...';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1000,system:'你是專業投資助理。繁體中文，不用markdown。',messages:[{role:'user',content:bSum()+'\n\n分析：1)風險評分(1-10) 2)最需注意3檔 3)7月財報前建議。每點2-3句。'}]});
+    document.getElementById('aiout').textContent=d.content&&d.content[0]?d.content[0].text:'無法取得回應';
+  }catch(e){if(e.message!=='no key')document.getElementById('aiout').textContent='連線失敗：'+e.message;}
+}
+async function doQ(q){
+  gTab('ai');document.getElementById('aiout').textContent='思考中...';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1000,system:'你是專業投資助理。繁體中文，不用markdown。',messages:[{role:'user',content:bSum()+'\n\n'+q}]});
+    document.getElementById('aiout').textContent=d.content&&d.content[0]?d.content[0].text:'無法取得回應';
+  }catch(e){if(e.message!=='no key')document.getElementById('aiout').textContent='連線失敗：'+e.message;}
+}
+function saveKey(){
+  var k=document.getElementById('apikey').value.trim();
+  if(!k){alert('請輸入 API Key');return;}
+  localStorage.setItem('apikey',k);
+  var s=document.getElementById('key-status');s.style.display='block';s.textContent='✓ API Key 已儲存';s.style.color='var(--g-c)';
+}
+async function testKey(){
+  var s=document.getElementById('key-status');s.style.display='block';s.textContent='測試中...';s.style.color='var(--text2)';
+  try{
+    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:20,messages:[{role:'user',content:'回覆「連線成功」'}]});
+    s.textContent='✓ '+(d.content&&d.content[0]?d.content[0].text:'連線成功');s.style.color='var(--g-c)';
+  }catch(e){s.textContent='✗ '+e.message;s.style.color='var(--r-c)';}
+}
+function saveR(){
+  var tw=document.getElementById('ttw').value,us=document.getElementById('tus').value,st=document.getElementById('tst').value,nm=document.getElementById('nm');
+  if(!('Notification'in window)){nm.textContent='此瀏覽器不支援通知';return;}
+  Notification.requestPermission().then(function(p){
+    if(p==='granted'){
+      timers.forEach(clearInterval);timers=[];
+      function sc(t,label,auto){timers.push(setInterval(function(){var n=new Date(),cur=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');if(cur===t){new Notification('📊 '+label);if(auto)fPrices();}},60000));}
+      sc(tw,'台股即將開盤',false);sc(us,'美股即將開盤',false);sc(st,'停損自動檢查',true);
+      nm.textContent='✓ 台股 '+tw+'・美股 '+us+'・停損 '+st;
+      localStorage.setItem('rm',JSON.stringify({tw:tw,us:us,st:st}));
+    }else nm.textContent='請允許通知權限';
+  });
+}
+function apFx(){var v=parseFloat(document.getElementById('mfx').value);if(v>0){fx=v;render();}}
+function sFilter(btn,f){flt=f;document.querySelectorAll('.fp').forEach(function(b){b.classList.remove('on')});btn.classList.add('on');rNews();}
+function rNews(){
+  var el=document.getElementById('newslist');
+  if(!newsData.length){el.innerHTML='<div class="empty">點「更新」取得 AI 過濾後的消息</div>';return;}
+  var list=flt==='all'?newsData:newsData.filter(function(n){return n.tags&&n.tags.some(function(t){return t===flt;});});
+  if(!list.length){el.innerHTML='<div class="empty">此分類暫無消息</div>';return;}
+  var rm={high:'<span class="tag tr">直接影響</span>',med:'<span class="tag ty">間接相關</span>',low:'<span class="tag tb">背景</span>'};
+  el.innerHTML=list.map(function(n){return '<div class="ni"><div style="display:flex;gap:5px;margin-bottom:4px">'+(rm[n.rel||'low'])+'<div class="ntitle" style="flex:1">'+n.title+'</div></div><div class="nbody">'+n.body+'</div>'+(n.impact?'<div class="nimp">💡 '+n.impact+'</div>':'')+'</div>';}).join('');
+}
+async function genMonthly(){
+  var key=getKey();if(!key){alert('請先輸入 API Key');gTab('settings');return;}
+  var btns=document.querySelectorAll('[onclick="genMonthly()"]');
+  btns.forEach(function(b){b.disabled=true;b.innerHTML='<span class="spin"></span>分析中，約需30秒...';});
+  var now=new Date(),mo=(now.getMonth()+1)+'月';
+  var containers=['mr-content','mr-main-content'];
+  containers.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div class="mr-loading"><span class="spin"></span><br>產生月報中...</div>';});
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:3000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'搜尋最新市場資訊，產生投資月報JSON：{"month":"2026年'+mo+'","theme":"主題","risk_score":7,"target_return":"1.5%","target_amount":"45,000","reviews":[{"type":"good","text":"正確"}],"recommendations":[{"name":"標的","code":"代號","cat":"分類","color":"#BA7517","bg":"#FAEEDA","ic":"2字","entry":"進場價","target":"目標","stop":"停損","horizon":"期間","reason":"理由","risk":"風險","tags":[]}],"adjustments":[{"name":"持倉","action":"持有","action_color":"#185FA5","action_bg":"#E6F1FB","price":"現價","reason":"理由"}],"key_dates":[{"date":"7/22","event":"TXN財報","importance":"high"}],"summary":"總結"}\n持倉：'+bSum()+'\n只輸出JSON。'}]})});
+    var d=await r.json(),txt=d.content.map(function(c){return c.type==='text'?c.text:''}).join(''),m=txt.match(/\{[\s\S]*\}/);
+    if(m){mrData=JSON.parse(m[0]);localStorage.setItem('monthlyReport',JSON.stringify(mrData));var mhtml=renderMrHtml(mrData);containers.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=mhtml;});}
+    else throw new Error('解析失敗');
+  }catch(e){containers.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">失敗：'+e.message+'</div>';});}
+  btns.forEach(function(b){b.disabled=false;b.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> 重新產生月報';});
+}
+function renderMrHtml(d){
+  if(!d)return'';
+  var adjColor={'加碼':'background:var(--g-bg);color:var(--g-c)','減碼':'background:var(--y-bg);color:var(--y-c)','持有':'background:var(--bluebg);color:var(--blue)','出場':'background:var(--r-bg);color:var(--r-c)'};
+  var lvTag={high:'<span class="tag tr">重要</span>',med:'<span class="tag ty">關注</span>',low:'<span class="tag tb">注意</span>'};
+  var revIcon={good:'<i class="fa-solid fa-circle-check" style="color:var(--g-c)"></i>',bad:'<i class="fa-solid fa-circle-xmark" style="color:var(--r-c)"></i>',note:'<i class="fa-solid fa-circle-info" style="color:var(--blue)"></i>'};
+  var recs=(d.recommendations||[]).map(function(r){var tags=(r.tags||[]).map(function(t){return'<span class="tag tp">'+t+'</span>';}).join('');return'<div class="rec-card"><div class="rec-hdr"><div class="rec-ic" style="background:'+(r.bg||'#FAEEDA')+';color:'+(r.color||'#BA7517')+'">'+(r.ic||'--')+'</div><div style="flex:1"><div class="rec-name">'+r.name+'</div><div class="rec-cat">'+(r.cat||'')+'</div></div><div class="rec-right"><div class="rec-target">目標 '+(r.target||'--')+'</div><div class="rec-stop">停損 '+(r.stop||'--')+'</div></div></div><div class="rec-body">進場：<strong>'+(r.entry||'--')+'</strong><br>理由：'+(r.reason||'')+'<br>風險：'+(r.risk||'')+'<div class="rec-tags">'+tags+'</div></div></div>';}).join('');
+  var adjs=(d.adjustments||[]).map(function(a){return'<div class="adj-row"><div><div class="adj-name">'+a.name+'</div><div class="adj-sub">'+(a.reason||'')+'</div></div><div class="adj-action"><div class="adj-tag" style="'+(adjColor[a.action]||'')+'">'+a.action+'</div><div class="adj-price">'+(a.price||'')+'</div></div></div>';}).join('');
+  var dates=(d.key_dates||[]).map(function(k){return'<div class="evi"><div class="evdc"><div class="evm">日期</div><div class="evd" style="font-size:13px">'+k.date+'</div></div><div style="flex:1"><div style="display:flex;align-items:center;gap:5px"><span style="font-size:12px;font-weight:600;color:var(--text)">'+k.event+'</span>'+(lvTag[k.importance]||'')+'</div></div></div>';}).join('');
+  var revs=(d.reviews||[]).map(function(r){return'<div class="rev-item"><div style="margin-top:3px">'+(revIcon[r.type]||'')+'</div><div class="rev-text">'+r.text+'</div></div>';}).join('');
+  return'<div class="mr-header"><div class="mr-title"><i class="fa-solid fa-calendar-check"></i> '+d.month+'投資月報</div><div class="mr-sub">主題：'+(d.theme||'')+'</div></div><div class="card"><div class="mr-section"><div class="mr-section-title">月度目標</div><div class="tgt-row"><span class="tgt-label">風險評分</span><span class="tgt-val">'+(d.risk_score||'--')+'/10</span></div><div class="tgt-row"><span class="tgt-label">目標月報酬</span><span class="tgt-val up">'+(d.target_return||'--')+'</span></div><div class="tgt-row"><span class="tgt-label">目標金額</span><span class="tgt-val up">NT$'+(d.target_amount||'--')+'</span></div></div><div class="mr-section"><div class="mr-section-title">持倉檢討</div>'+revs+'</div></div><div class="lbl">本月推薦標的</div>'+recs+'<div class="lbl">現有持倉調整</div><div class="card"><div style="padding:4px 13px">'+adjs+'</div></div><div class="lbl">本月關鍵日期</div><div class="card">'+dates+'</div><div class="card" style="padding:12px 13px"><div class="mr-section-title" style="margin-bottom:6px">月度總結</div><div style="font-size:12px;color:var(--text2);line-height:1.7">'+(d.summary||'')+'</div></div>';
+}
+function rMonthlyPage(){
+  var el=document.getElementById('mr-main-content');
+  if(!el)return;
+  if(mrData){el.innerHTML=renderMrHtml(mrData);return;}
+  var saved=localStorage.getItem('monthlyReport');
+  if(saved){try{mrData=JSON.parse(saved);el.innerHTML=renderMrHtml(mrData);}catch(e){}}
+}
+function sAiTab(t){
+  document.getElementById('ai-quick').style.display=t==='quick'?'contents':'none';
+  document.getElementById('ai-monthly').style.display=t==='monthly'?'contents':'none';
+  document.getElementById('pai-quick').classList.toggle('on',t==='quick');
+  document.getElementById('pai-monthly').classList.toggle('on',t==='monthly');
+}
+// ── 持股設定 ──
+function renderStockEdit(){
+  function makeRow(s){
+    var iu=STOCKS.us.indexOf(s)>-1,c=CATS[s.cat],unit=iu?'$':'NT$',sv=calcStopPreview(s);
+    return '<div class="pos-item"><div class="pos-header"><div class="pos-ic" style="background:'+c.b+';color:'+c.c+'">'+s.ic+'</div><div style="flex:1;margin-left:2px"><div class="pos-name">'+s.n+'</div></div><span class="pos-cat tag" style="background:'+c.b+';color:'+c.c+'">'+c.s+'</span></div><div class="pos-fields"><div class="pos-field"><label>成本('+unit+')</label><input type="number" inputmode="decimal" id="ec-'+s.id+'" value="'+s.cost+'" step="0.1" onchange="prvStop(this,&quot;'+s.id+'&quot;)"></div><div class="pos-field"><label>股數</label><input type="number" inputmode="numeric" id="eq-'+s.id+'" value="'+s.qty+'" step="1"></div><div class="pos-field"><label style="color:var(--blue)">AI停損</label><div id="es-'+s.id+'" class="pos-stop">'+sv+'</div></div></div></div>';
+  }
+  var tw=document.getElementById('pos-tw'),us=document.getElementById('pos-us');
+  if(tw)tw.innerHTML=STOCKS.tw.map(makeRow).join('');
+  if(us)us.innerHTML=STOCKS.us.map(makeRow).join('');
+}
+function saveStocks(){
+  ALL.forEach(function(s){
+    var ci=document.getElementById('ec-'+s.id),qi=document.getElementById('eq-'+s.id);
+    if(ci){var c=parseFloat(ci.value);if(c>0)s.cost=c;}
+    if(qi){var q=parseInt(qi.value);if(q>0)s.qty=q;}
+    var el=document.getElementById('es-'+s.id);if(el)el.textContent=calcStopPreview(s);
+  });
+  localStorage.setItem('stockConfig',JSON.stringify(ALL.map(function(s){return{id:s.id,cost:s.cost,qty:s.qty};})));
+  render();
+  var msg=document.getElementById('stock-save-msg');
+  if(msg){msg.textContent='✓ 已儲存';msg.style.color='var(--g-c)';setTimeout(function(){msg.textContent='';},3000);}
+}
+function loadStockConfig(){
+  var saved=localStorage.getItem('stockConfig');if(!saved)return;
+  try{var cfg=JSON.parse(saved);cfg.forEach(function(c){var s=ALL.find(function(x){return x.id===c.id;});if(s){if(c.cost)s.cost=c.cost;if(c.qty)s.qty=c.qty;}});}catch(e){}
+}
+// ── 初始化 ──
+(function(){
+  var k=localStorage.getItem('apikey');if(k){var el=document.getElementById('apikey');if(el)el.value=k;}
+  var lp=localStorage.getItem('lastPrices');if(lp){try{Object.assign(P,JSON.parse(lp));}catch(e){}}
+  var lf=localStorage.getItem('lastFx');if(lf)fx=parseFloat(lf);
+  var rm=localStorage.getItem('rm');
+  if(rm){try{var rv=JSON.parse(rm);['ttw','tus','tst'].forEach(function(id,i){var v=rv[['tw','us','st'][i]];if(v){var el=document.getElementById(id);if(el)el.value=v;}});}catch(e){}}
+  var mr=localStorage.getItem('monthlyReport');if(mr){try{mrData=JSON.parse(mr);}catch(e){}}
+  loadStockConfig();render();rEvts();renderStockEdit();
+})();
+</script>
+</body>
+</html>
