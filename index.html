@@ -864,6 +864,33 @@ function loadStockConfig(){
   var saved=localStorage.getItem('stockConfig');if(!saved)return;
   try{var cfg=JSON.parse(saved);cfg.forEach(function(c){var s=ALL.find(function(x){return x.id===c.id;});if(s){if(c.cost)s.cost=c.cost;if(c.qty)s.qty=c.qty;}});}catch(e){}
 }
+
+function isUS(s){return STOCKS.us.indexOf(s)>-1;}
+function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
+function cStats(){
+  var r={};
+  ALL.forEach(function(s){
+    if(s.pending&&!P[s.id])return;
+    var p=P[s.id];
+    if(!r[s.cat])r[s.cat]={pnl:0,has:false,cnt:0};
+    r[s.cat].cnt++;
+    if(p){r[s.cat].pnl+=ntd(s,p);r[s.cat].has=true;}
+  });
+  return r;
+}
+function alrt(s){
+  var p=P[s.id];if(!p)return null;
+  var st=calcStop(s);
+  if(p<=st)return'r';
+  if((p-st)/p<0.03)return'y';
+  return'g';
+}
+function prvStop(inp,id){
+  var s=ALL.find(function(x){return x.id===id;});
+  if(!s)return;
+  var c=parseFloat(inp.value);
+  if(c>0){var old=s.cost;s.cost=c;var el=document.getElementById('es-'+id);if(el)el.textContent=calcStopPreview(s);s.cost=old;}
+}
 // ── 初始化 ──
 (function(){
   var k=localStorage.getItem('apikey');if(k){var el=document.getElementById('apikey');if(el)el.value=k;}
