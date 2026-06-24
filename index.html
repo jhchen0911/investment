@@ -658,69 +658,85 @@ async function fPrices(){
   var ic=document.getElementById('ri');
   ic.className='fa-solid fa-rotate fa-spin';
   document.getElementById('hs').textContent='更新中...';
+  var updated=0;
 
-  // 1. 匯率 — open.er-api.com 免費，無需 key
+  // 1. 匯率（open.er-api.com 無 CORS 問題）
   try{
-    var fxRes=await fetch('https://open.er-api.com/v6/latest/USD');
-    var fxData=await fxRes.json();
-    if(fxData.rates&&fxData.rates.TWD) fx=parseFloat(fxData.rates.TWD);
-  }catch(e){ fx=31.67; }
+    var ac=new AbortController();
+    setTimeout(function(){ac.abort();},5000);
+    var fr=await fetch('https://open.er-api.com/v6/latest/USD',{signal:ac.signal});
+    var fd=await fr.json();
+    if(fd.rates&&fd.rates.TWD)fx=parseFloat(fd.rates.TWD);
+  }catch(e){}
 
-  // 2. 股票代號對應 Yahoo Finance symbol
+  // 2. 建立 Yahoo Finance 批次 symbol 清單
   var symMap={};
-  STOCKS.tw.forEach(function(s){ symMap[s.id]=s.id+'.TW'; });
-  STOCKS.us.forEach(function(s){ symMap[s.id]=s.id; });
+  STOCKS.tw.forEach(function(s){symMap[s.id]=s.id+'.TW';});
+  STOCKS.us.forEach(function(s){symMap[s.id]=s.id;});
+  var symList=Object.values(symMap).join(',');
+  var yUrl='https://query1.finance.yahoo.com/v7/finance/quote?lang=en-US&region=US&corsDomain=finance.yahoo.com&symbols='+encodeURIComponent(symList);
 
-  // 3. 取得單一股票價格（直連 → CORS proxy 備援）
-  async function getPrice(sym){
-    var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
-    // 直連嘗試
-    try{
-      var r=await fetch(url,{credentials:'omit'});
-      if(r.ok){
-        var d=await r.json();
-        var p=d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta.regularMarketPrice;
-        if(p) return parseFloat(p);
-      }
-    }catch(e){}
-    // CORS proxy 備援
-    try{
-      var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-      var r2=await fetch(proxy);
-      var d2=await r2.json();
-      var parsed=JSON.parse(d2.contents);
-      var p2=parsed.chart&&parsed.chart.result&&parsed.chart.result[0]&&parsed.chart.result[0].meta.regularMarketPrice;
-      if(p2) return parseFloat(p2);
-    }catch(e){}
-    return null;
+  // 3. 依序嘗試 4 種方法，任一成功就停止
+  var quotes=null;
+
+  // 方法 A：直連 Yahoo Finance v7
+  if(!quotes){try{
+    var r=await fetch(yUrl,{credentials:'omit',signal:AbortSignal.timeout?AbortSignal.timeout(6000):undefined});
+    if(r.ok){var d=await r.json();quotes=d.quoteResponse&&d.quoteResponse.result;}
+  }catch(e){}}
+
+  // 方法 B：corsproxy.io
+  if(!quotes){try{
+    var r=await fetch('https://corsproxy.io/?'+encodeURIComponent(yUrl));
+    if(r.ok){var d=await r.json();quotes=d.quoteResponse&&d.quoteResponse.result;}
+  }catch(e){}}
+
+  // 方法 C：allorigins.win
+  if(!quotes){try{
+    var r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(yUrl));
+    var d=await r.json();
+    var parsed=JSON.parse(d.contents);
+    quotes=parsed.quoteResponse&&parsed.quoteResponse.result;
+  }catch(e){}}
+
+  // 方法 D：corsproxy.io + v8 逐一抓（最後手段）
+  if(!quotes){
+    var ids=Object.keys(symMap);
+    var results=await Promise.allSettled(ids.map(async function(id){
+      var url='https://corsproxy.io/?'+encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/'+symMap[id]+'?interval=1d&range=1d');
+      var r=await fetch(url);
+      var d=await r.json();
+      var p=d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta&&d.chart.result[0].meta.regularMarketPrice;
+      return p?{symbol:symMap[id],regularMarketPrice:p}:null;
+    }));
+    quotes=results.filter(function(r){return r.status==='fulfilled'&&r.value;}).map(function(r){return r.value;});
   }
 
-  // 4. 並行抓取所有股票
-  var ids=Object.keys(symMap);
-  var results=await Promise.allSettled(ids.map(function(id){
-    return getPrice(symMap[id]).then(function(price){return{id:id,price:price};});
-  }));
-
-  var updated=0;
-  results.forEach(function(r){
-    if(r.status==='fulfilled'&&r.value&&r.value.price){
-      P[r.value.id]=r.value.price;
+  // 4. 解析結果
+  if(quotes&&quotes.length>0){
+    quotes.forEach(function(q){
+      if(!q||!q.regularMarketPrice)return;
+      var id=q.symbol.replace('.TW','');
+      P[id]=q.regularMarketPrice;
       updated++;
-    }
-  });
+    });
+  }
 
+  // 5. 更新 UI
   var now=new Date();
   if(updated>0){
-    document.getElementById('hs').textContent='更新於 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+'　匯率 '+fx.toFixed(2);
+    document.getElementById('hs').textContent='更新於 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+'　匯率 '+fx.toFixed(2)+'　('+updated+'檔)';
     render();chkAlerts();
     localStorage.setItem('lastPrices',JSON.stringify(P));
     localStorage.setItem('lastFx',fx.toString());
   } else {
-    document.getElementById('hs').textContent='更新失敗，請重試';
+    // 使用快取
+    var cached=localStorage.getItem('lastPrices');
+    if(cached){try{Object.assign(P,JSON.parse(cached));render();document.getElementById('hs').textContent='使用快取報價（無法連線）';}catch(e){}}
+    else document.getElementById('hs').textContent='更新失敗，請重試';
   }
   ic.className='fa-solid fa-rotate';
 }
-
 
 async function fNews(){
   document.getElementById('newslist').innerHTML='<div class="empty"><span class="spin"></span>AI 搜尋中...</div>';
