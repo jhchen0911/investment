@@ -376,24 +376,27 @@ var CATS={
   pcb:{n:'PCB・衛星',s:'PCB・衛星',c:'#1D9E75',b:'#E1F5EE',d:'#1D9E75'},
   aviation:{n:'航空',s:'油價受惠',c:'#378ADD',b:'#E6F1FB',d:'#378ADD'},
   etf:{n:'大盤 ETF',s:'S&P500 ETF',c:'#3B6D11',b:'#EAF3DE',d:'#639922'},
-  power_us:{n:'美股功率',s:'美股功率半導體',c:'#D85A30',b:'#FAECE7',d:'#D85A30'}
+  power_us:{n:'美股功率',s:'美股功率半導體',c:'#D85A30',b:'#FAECE7',d:'#D85A30'},
+  googl:{n:'科技巨頭',s:'科技巨頭',c:'#2563EB',b:'#EFF6FF',d:'#3B82F6'},
+  ev:{n:'物理AI・EV',s:'物理AI・EV',c:'#7C3AED',b:'#F5F3FF',d:'#8B5CF6'}
 };
 var STOCKS={
   tw:[
-    {id:'2330',n:'台積電',cost:2310,qty:26,stop:2050,ic:'積',cat:'foundry',sub:'AI CoWoS・晶圓代工'},
-    {id:'2481',n:'強茂',cost:150,qty:1333,stop:135,ic:'強',cat:'power',sub:'MOSFET・安世轉單'},
-    {id:'3675',n:'德微',cost:370,qty:324,stop:333,ic:'德',cat:'power',sub:'整流二極體・800V'},
-    {id:'8261',n:'富鼎',cost:200,qty:400,stop:180,ic:'富',cat:'power',sub:'高壓伺服器電源'},
-    {id:'6411',n:'晶焱',cost:270,qty:185,stop:238,ic:'晶',cat:'power',sub:'ESD/TVS保護元件'},
-    {id:'2313',n:'華通',cost:235,qty:638,stop:211,ic:'華',cat:'pcb',sub:'星鏈太空板市占90%'},
-    {id:'2618',n:'長榮航',cost:39,qty:3846,stop:35,ic:'榮',cat:'aviation',sub:'油價下跌受惠'}
+    {id:'2330',n:'台積電',cost:2410,qty:256,stopPct:0.89,stopRule:'季線估算-11%',ic:'積',cat:'foundry',sub:'AI CoWoS・玻璃載板'},
+    {id:'2303',n:'聯電',cost:172,qty:800,stopPct:0.90,stopRule:'成本-10%',ic:'聯',cat:'foundry',sub:'6/8吋晶圓・功率半導體'},
+    {id:'2481',n:'強茂',cost:141,qty:1000,stopPct:0.90,stopRule:'成本-10%',ic:'強',cat:'power',sub:'MOSFET・安世轉單',pending:true},
+    {id:'3675',n:'德微',cost:350,qty:343,stopPct:0.90,stopRule:'成本-10%',ic:'德',cat:'power',sub:'整流二極體・800V',pending:true},
+    {id:'8261',n:'富鼎',cost:200,qty:400,stopPct:0.90,stopRule:'成本-10%',ic:'富',cat:'power',sub:'高壓伺服器電源',pending:true},
+    {id:'6411',n:'晶焱',cost:265,qty:189,stopPct:0.88,stopRule:'成本-12%',ic:'晶',cat:'power',sub:'ESD/TVS保護元件',pending:true}
   ],
   us:[
-    {id:'VOO',n:'VOO',cost:558,qty:16,stop:513,ic:'V',cat:'etf',sub:'S&P 500 大盤指數'},
-    {id:'TXN',n:'TXN',cost:210,qty:66,stop:189,ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
-    {id:'ON',n:'ON',cost:115,qty:40,stop:103,ic:'O',cat:'power_us',sub:'SiC・$115K/機櫃'},
-    {id:'MPWR',n:'MPWR',cost:1565,qty:2,stop:1377,ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
-    {id:'VICR',n:'VICR',cost:71,qty:22,stop:62,ic:'Vi',cat:'power_us',sub:'800V純玩家'}
+    {id:'GOOGL',n:'GOOGL',cost:329.28,qty:3,stopPct:0.90,stopRule:'成本-10%',ic:'G',cat:'googl',sub:'Google・AI雲端・舊倉'},
+    {id:'TSLA',n:'TSLA',cost:440.90,qty:10,stopPct:0.82,stopRule:'$360元關卡',ic:'Te',cat:'ev',sub:'Optimus機器人・EV・舊倉'},
+    {id:'VOO',n:'VOO',cost:672,qty:18,stopPct:0.92,stopRule:'成本-8%',ic:'V',cat:'etf',sub:'S&P 500 大盤指數',pending:true},
+    {id:'TXN',n:'TXN',cost:303,qty:62,stopPct:0.90,stopRule:'成本-10%',ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
+    {id:'ON',n:'ON',cost:118,qty:55,stopPct:0.90,stopRule:'成本-10%',ic:'O',cat:'power_us',sub:'SiC・$115K/機櫃'},
+    {id:'MPWR',n:'MPWR',cost:1420,qty:3,stopPct:0.88,stopRule:'成本-12%',ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
+    {id:'VICR',n:'VICR',cost:71,qty:22,stopPct:0.88,stopRule:'成本-12%',ic:'Vi',cat:'power_us',sub:'800V純玩家',pending:true}
   ]
 };
 var EVENTS=[
@@ -459,8 +462,8 @@ function pct(p,c){return(p>=c?'+':'')+((p-c)/c*100).toFixed(1)+'%'}
 
 function render(){
   var twC=0,usC=0,twP=0,usP=0,has=Object.keys(P).length>0;
-  STOCKS.tw.forEach(function(s){var p=P[s.id];twC+=s.cost*s.qty;if(p)twP+=ntd(s,p);});
-  STOCKS.us.forEach(function(s){var p=P[s.id];usC+=s.cost*s.qty*fx;if(p)usP+=ntd(s,p);});
+  STOCKS.tw.forEach(function(s){if(s.pending&&!P[s.id])return;var p=P[s.id];twC+=s.cost*s.qty;if(p)twP+=ntd(s,p);});
+  STOCKS.us.forEach(function(s){if(s.pending&&!P[s.id])return;var p=P[s.id];usC+=s.cost*s.qty*fx;if(p)usP+=ntd(s,p);});
   document.getElementById('hc').textContent=fV(twC+usC);
   document.getElementById('hf').textContent=fx.toFixed(2)+' TWD/USD';
   if(has){
@@ -482,6 +485,10 @@ function rCatSum(){
 }
 function sRow(s,inCat){
   var p=P[s.id],iu=isUS(s),c=CATS[s.cat];
+  if(s.pending && !p){
+    var meta=inCat?'<div class="ssubc">'+s.sub+'</div>':'<div class="smeta"><span class="tag" style="background:'+c.b+';color:'+c.c+'">'+c.s+'</span><span class="ssub">'+s.sub+'</span></div>';
+    return '<div class="srow" style="opacity:0.55"><div class="sic" style="background:'+c.b+';color:'+c.c+'">'+s.ic+'</div><div class="smid"><div class="sname">'+s.n+'</div>'+meta+'</div><div class="sright"><div style="font-size:10px;color:var(--text2)">目標</div><div style="font-size:11px;color:var(--text2);font-weight:600">'+(iu?'$':'NT$')+s.cost+'</div><div style="display:flex;justify-content:flex-end;margin-top:2px"><span class="tag tb">待買</span></div></div></div>';
+  }
   var pr=p?(iu?'$'+p.toFixed(2):'NT$'+p.toLocaleString()):'—';
   var pnlH='',alH='';
   if(p){
@@ -500,7 +507,7 @@ function rStocks(){
   if(vM==='s'){
     el.innerHTML='<div class="row-hdr"><span class="lbl">台股</span></div>'+STOCKS.tw.map(function(s){return sRow(s,false)}).join('')+'<div class="row-hdr" style="border-top:.5px solid var(--border)"><span class="lbl">美股</span></div>'+STOCKS.us.map(function(s){return sRow(s,false)}).join('');
   } else {
-    var ord=['foundry','power','pcb','power_us','etf','aviation'],html='',st=cStats();
+    var ord=['foundry','power','pcb','power_us','etf','aviation','googl','ev'],html='',st=cStats();
     ord.forEach(function(k){
       var c=CATS[k],grp=ALL.filter(function(s){return s.cat===k});
       if(!grp.length)return;
@@ -674,7 +681,7 @@ function bSum(){
   STOCKS.tw.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本NT$'+s.cost+(p?' 現價NT$'+p+' '+pct(p,s.cost):'')+' 停損NT$'+calcStop(s));});
   l.push('美股（匯率'+fx.toFixed(2)+'）：');
   STOCKS.us.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本$'+s.cost+(p?' 現價$'+p+' '+pct(p,s.cost):'')+' 停損$'+calcStop(s));});
-  l.push('7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
+  l.push('已持倉：台積電/聯電/TXN/ON/MPWR/GOOGL/TSLA。7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
   return l.join('\n');
 }
 async function doAn(){
@@ -794,6 +801,7 @@ function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
 function cStats(){
   var r={};
   ALL.forEach(function(s){
+    if(s.pending&&!P[s.id])return;
     var p=P[s.id];
     if(!r[s.cat])r[s.cat]={pnl:0,has:false,cnt:0};
     r[s.cat].cnt++;
