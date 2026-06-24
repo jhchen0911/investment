@@ -655,182 +655,69 @@ async function fNews(){
   }catch(e){if(e.message!=='no key')document.getElementById('newslist').innerHTML='<div class="empty">載入失敗：'+e.message+'</div>';}
 }
 async function fPrices(){
-  var ic=document.getElementById('ri');ic.className='fa-solid fa-rotate fa-spin';
+  var ic=document.getElementById('ri');
+  ic.className='fa-solid fa-rotate fa-spin';
   document.getElementById('hs').textContent='更新中...';
+
+  // 1. 匯率 — open.er-api.com 免費，無需 key
   try{
-    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:500,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'搜尋以下最新股價，只回傳JSON：{"2330":0,"2481":0,"3675":0,"8261":0,"6411":0,"2313":0,"2618":0,"VOO":0,"TXN":0,"ON":0,"MPWR":0,"VICR":0,"USDTWD":0}\n台股：台積電2330、強茂2481、德微3675、富鼎8261、晶焱6411、華通2313、長榮航2618\n美股：VOO、TXN、ON、MPWR、VICR\n只輸出JSON。'}]});
-    var txt=d.content.map(function(c){return c.type==='text'?c.text:''}).join(''),m=txt.match(/\{[\s\S]*\}/);
-    if(m){
-      var psd=JSON.parse(m[0]);
-      if(psd.USDTWD){fx=parseFloat(psd.USDTWD);delete psd.USDTWD;}
-      Object.assign(P,psd);
-      var now=new Date();
-      document.getElementById('hs').textContent='更新於 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+'　匯率 '+fx.toFixed(2);
-      render();chkAlerts();
-      localStorage.setItem('lastPrices',JSON.stringify(P));
-      localStorage.setItem('lastFx',fx.toString());
-    } else document.getElementById('hs').textContent='更新失敗，請重試';
-  }catch(e){if(e.message!=='no key')document.getElementById('hs').textContent='更新失敗';}
+    var fxRes=await fetch('https://open.er-api.com/v6/latest/USD');
+    var fxData=await fxRes.json();
+    if(fxData.rates&&fxData.rates.TWD) fx=parseFloat(fxData.rates.TWD);
+  }catch(e){ fx=31.67; }
+
+  // 2. 股票代號對應 Yahoo Finance symbol
+  var symMap={};
+  STOCKS.tw.forEach(function(s){ symMap[s.id]=s.id+'.TW'; });
+  STOCKS.us.forEach(function(s){ symMap[s.id]=s.id; });
+
+  // 3. 取得單一股票價格（直連 → CORS proxy 備援）
+  async function getPrice(sym){
+    var url='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
+    // 直連嘗試
+    try{
+      var r=await fetch(url,{credentials:'omit'});
+      if(r.ok){
+        var d=await r.json();
+        var p=d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta.regularMarketPrice;
+        if(p) return parseFloat(p);
+      }
+    }catch(e){}
+    // CORS proxy 備援
+    try{
+      var proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+      var r2=await fetch(proxy);
+      var d2=await r2.json();
+      var parsed=JSON.parse(d2.contents);
+      var p2=parsed.chart&&parsed.chart.result&&parsed.chart.result[0]&&parsed.chart.result[0].meta.regularMarketPrice;
+      if(p2) return parseFloat(p2);
+    }catch(e){}
+    return null;
+  }
+
+  // 4. 並行抓取所有股票
+  var ids=Object.keys(symMap);
+  var results=await Promise.allSettled(ids.map(function(id){
+    return getPrice(symMap[id]).then(function(price){return{id:id,price:price};});
+  }));
+
+  var updated=0;
+  results.forEach(function(r){
+    if(r.status==='fulfilled'&&r.value&&r.value.price){
+      P[r.value.id]=r.value.price;
+      updated++;
+    }
+  });
+
+  var now=new Date();
+  if(updated>0){
+    document.getElementById('hs').textContent='更新於 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+'　匯率 '+fx.toFixed(2);
+    render();chkAlerts();
+    localStorage.setItem('lastPrices',JSON.stringify(P));
+    localStorage.setItem('lastFx',fx.toString());
+  } else {
+    document.getElementById('hs').textContent='更新失敗，請重試';
+  }
   ic.className='fa-solid fa-rotate';
 }
-function chkAlerts(){
-  var hit=ALL.filter(function(s){return P[s.id]&&P[s.id]<=s.stop});
-  if(hit.length&&'Notification'in window&&Notification.permission==='granted')
-    new Notification('⚠️ 停損警報',{body:hit.map(function(s){return s.n}).join('、')+' 已觸發停損'});
-}
-function bSum(){
-  var l=['【持倉摘要】台股：'];
-  STOCKS.tw.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本NT$'+s.cost+(p?' 現價NT$'+p+' '+pct(p,s.cost):'')+' 停損NT$'+calcStop(s));});
-  l.push('美股（匯率'+fx.toFixed(2)+'）：');
-  STOCKS.us.forEach(function(s){var p=P[s.id];l.push('- '+s.n+'('+CATS[s.cat].n+') 成本$'+s.cost+(p?' 現價$'+p+' '+pct(p,s.cost):'')+' 停損$'+calcStop(s));});
-  l.push('已持倉：台積電/聯電/TXN/ON/MPWR/GOOGL/TSLA。7月財報(TXN 7/22、ON 7/28、台積電法說)是關鍵催化劑。');
-  return l.join('\n');
-}
-async function doAn(){
-  gTab('ai');document.getElementById('aiout').textContent='分析中...';
-  try{
-    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1000,system:'你是專業台股投資助理。繁體中文，簡潔專業，不用markdown。',messages:[{role:'user',content:bSum()+'\n\n請分析：1)整體風險評分(1-10) 2)最需注意的3檔標的 3)7月財報前操作建議。每點2-3句。'}]});
-    document.getElementById('aiout').textContent=d.content&&d.content[0]?d.content[0].text:'無法取得回應';
-  }catch(e){if(e.message!=='no key')document.getElementById('aiout').textContent='連線失敗：'+e.message;}
-}
-async function doQ(q){
-  gTab('ai');document.getElementById('aiout').textContent='思考中...';
-  try{
-    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:1000,system:'你是專業台股投資助理。繁體中文，簡潔專業，不用markdown。',messages:[{role:'user',content:bSum()+'\n\n'+q}]});
-    document.getElementById('aiout').textContent=d.content&&d.content[0]?d.content[0].text:'無法取得回應';
-  }catch(e){if(e.message!=='no key')document.getElementById('aiout').textContent='連線失敗：'+e.message;}
-}
-function saveKey(){
-  var k=document.getElementById('apikey').value.trim();
-  if(!k){alert('請輸入 API Key');return;}
-  localStorage.setItem('apikey',k);
-  var s=document.getElementById('key-status');s.style.display='block';s.textContent='✓ API Key 已儲存';s.style.color='var(--g-c)';
-}
-async function testKey(){
-  var s=document.getElementById('key-status');s.style.display='block';s.textContent='測試中...';s.style.color='var(--text2)';
-  try{
-    var d=await apiCall({model:'claude-sonnet-4-6',max_tokens:20,messages:[{role:'user',content:'回覆「連線成功」'}]});
-    s.textContent='✓ '+(d.content&&d.content[0]?d.content[0].text:'連線成功');s.style.color='var(--g-c)';
-  }catch(e){s.textContent='✗ '+e.message;s.style.color='var(--r-c)';}
-}
-function saveR(){
-  var tw=document.getElementById('ttw').value,us=document.getElementById('tus').value,st=document.getElementById('tst').value,nm=document.getElementById('nm');
-  if(!('Notification'in window)){nm.textContent='此瀏覽器不支援通知功能';return;}
-  Notification.requestPermission().then(function(p){
-    if(p==='granted'){
-      timers.forEach(clearInterval);timers=[];
-      function sc(t,label,auto){timers.push(setInterval(function(){var n=new Date(),cur=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');if(cur===t){new Notification('📊 '+label);if(auto)fPrices();}},60000));}
-      sc(tw,'台股即將開盤',false);sc(us,'美股即將開盤',false);sc(st,'停損自動檢查',true);
-      nm.textContent='✓ 台股 '+tw+'・美股 '+us+'・停損 '+st;
-      localStorage.setItem('rm',JSON.stringify({tw:tw,us:us,st:st}));
-    } else nm.textContent='請允許通知權限後再試';
-  });
-}
-function apFx(){var v=parseFloat(document.getElementById('mfx').value);if(v>0){fx=v;render();}}
 
-
-// ── 持股設定相關函式 ──
-function calcStop(s){
-  var iu=STOCKS.us.indexOf(s)>-1;
-  var v=s.cost*s.stopPct;
-  return iu?Math.round(v*100)/100:Math.round(v);
-}
-function calcStopPreview(s){
-  var iu=STOCKS.us.indexOf(s)>-1;
-  return (iu?'$':'NT$')+calcStop(s);
-}
-function prvStop(inp,id){
-  var s=ALL.find(function(x){return x.id===id;});
-  if(!s)return;
-  var c=parseFloat(inp.value);
-  if(c>0){var old=s.cost;s.cost=c;var el=document.getElementById('es-'+id);if(el)el.textContent=calcStopPreview(s);s.cost=old;}
-}
-function renderStockEdit(){
-  function makeRow(s){
-    var iu=STOCKS.us.indexOf(s)>-1;
-    var c=CATS[s.cat];
-    var unit=iu?'$':'NT$';
-    var sv=calcStopPreview(s);
-    return '<div class="pos-item">'+
-      '<div class="pos-header">'+
-        '<div class="pos-ic" style="background:'+c.b+';color:'+c.c+'">'+s.ic+'</div>'+
-        '<div style="flex:1;margin-left:2px"><div class="pos-name">'+s.n+'</div></div>'+
-        '<span class="pos-cat tag" style="background:'+c.b+';color:'+c.c+'">'+c.s+'</span>'+
-      '</div>'+
-      '<div class="pos-fields">'+
-        '<div class="pos-field"><label>成本('+unit+')</label>'+
-          '<input type="number" inputmode="decimal" id="ec-'+s.id+'" value="'+s.cost+'" step="0.1" onchange="prvStop(this,&quot;'+s.id+'&quot;)"></div>'+
-        '<div class="pos-field"><label>股數</label>'+
-          '<input type="number" inputmode="numeric" id="eq-'+s.id+'" value="'+s.qty+'" step="1"></div>'+
-        '<div class="pos-field"><label style="color:var(--blue)">AI 停損</label>'+
-          '<div id="es-'+s.id+'" class="pos-stop">'+sv+'</div></div>'+
-      '</div>'+
-    '</div>';
-  }
-  var tw=document.getElementById('pos-tw');
-  var us=document.getElementById('pos-us');
-  if(tw)tw.innerHTML=STOCKS.tw.map(makeRow).join('');
-  if(us)us.innerHTML=STOCKS.us.map(makeRow).join('');
-}
-function saveStocks(){
-  ALL.forEach(function(s){
-    var ci=document.getElementById('ec-'+s.id);
-    var qi=document.getElementById('eq-'+s.id);
-    if(ci){var c=parseFloat(ci.value);if(c>0)s.cost=c;}
-    if(qi){var q=parseInt(qi.value);if(q>0)s.qty=q;}
-    var el=document.getElementById('es-'+s.id);
-    if(el)el.textContent=calcStopPreview(s);
-  });
-  localStorage.setItem('stockConfig',JSON.stringify(ALL.map(function(s){return{id:s.id,cost:s.cost,qty:s.qty};})));
-  render();
-  var msg=document.getElementById('stock-save-msg');
-  if(msg){msg.textContent='✓ 已儲存，損益即時更新';msg.style.color='var(--g-c)';setTimeout(function(){msg.textContent='';},3000);}
-}
-function loadStockConfig(){
-  var saved=localStorage.getItem('stockConfig');
-  if(!saved)return;
-  try{
-    var cfg=JSON.parse(saved);
-    cfg.forEach(function(c){
-      var s=ALL.find(function(x){return x.id===c.id;});
-      if(s){if(c.cost)s.cost=c.cost;if(c.qty)s.qty=c.qty;}
-    });
-  }catch(e){}
-}
-// ── alrt 使用動態停損 ──
-function isUS(s){return STOCKS.us.indexOf(s)>-1;}
-function ntd(s,p){return(p-s.cost)*s.qty*(isUS(s)?fx:1);}
-function cStats(){
-  var r={};
-  ALL.forEach(function(s){
-    if(s.pending&&!P[s.id])return;
-    var p=P[s.id];
-    if(!r[s.cat])r[s.cat]={pnl:0,has:false,cnt:0};
-    r[s.cat].cnt++;
-    if(p){r[s.cat].pnl+=ntd(s,p);r[s.cat].has=true;}
-  });
-  return r;
-}
-function alrt(s){
-  var p=P[s.id];if(!p)return null;
-  var st=calcStop(s);
-  if(p<=st)return'r';
-  if((p-st)/p<0.03)return'y';
-  return'g';
-}
-
-/* 初始化 */
-(function(){
-  var k=localStorage.getItem('apikey');if(k)document.getElementById('apikey').value=k;
-  var lp=localStorage.getItem('lastPrices');if(lp){try{Object.assign(P,JSON.parse(lp));}catch(e){}}
-  var lf=localStorage.getItem('lastFx');if(lf)fx=parseFloat(lf);
-  var rm=localStorage.getItem('rm');
-  if(rm){try{var rv=JSON.parse(rm);if(rv.tw)document.getElementById('ttw').value=rv.tw;if(rv.us)document.getElementById('tus').value=rv.us;if(rv.st)document.getElementById('tst').value=rv.st;}catch(e){}}
-  var mr=localStorage.getItem('monthlyReport');
-  if(mr){try{mrData=JSON.parse(mr);}catch(e){}}
-  if(!k){setTimeout(function(){gTab('settings');},300);}
-})();
-loadStockConfig();render();rEvts();renderStockEdit();
-</script>
-</body>
-</html>
