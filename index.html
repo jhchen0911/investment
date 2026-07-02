@@ -377,7 +377,7 @@ var CATS={
   aviation:{n:'航空',s:'油價受惠',c:'#378ADD',b:'#E6F1FB',d:'#378ADD'},
   etf:{n:'大盤 ETF',s:'S&P500 ETF',c:'#3B6D11',b:'#EAF3DE',d:'#639922'},
   power_us:{n:'美股功率',s:'美股功率半導體',c:'#D85A30',b:'#FAECE7',d:'#D85A30'},
-  googl:{n:'科技巨頭',s:'科技巨頭',c:'#2563EB',b:'#EFF6FF',d:'#3B82F6'},
+  googl:{n:'科技巨頭',s:'科技巨頭',c:'#2563EB',b:'#EFF6FF',d:'#3B82F6'},memory:{s:'記憶體',c:'#7C3AED',b:'#EDE9FE'},
   ev:{n:'物理AI・EV',s:'物理AI・EV',c:'#7C3AED',b:'#F5F3FF',d:'#8B5CF6'}
 };
 var STOCKS={
@@ -394,10 +394,11 @@ var STOCKS={
   us:[
     {id:'GOOGL',n:'GOOGL',cost:329.28,qty:3,stopPct:0.90,stopRule:'成本-10%',ic:'G',cat:'googl',sub:'Google・AI雲端・舊倉'},
     {id:'TSLA',n:'TSLA',cost:440.90,qty:10,stopPct:0.82,stopRule:'$360元關卡',ic:'Te',cat:'ev',sub:'Optimus機器人・EV・舊倉'},
-    {id:'VOO',n:'VOO',cost:672,qty:18,stopPct:0.92,stopRule:'成本-8%',ic:'V',cat:'etf',sub:'S&P 500 大盤指數',pending:true},
+    {id:'VOO',n:'VOO',cost:681,qty:18,stopPct:0.92,stopRule:'成本-8%',ic:'V',cat:'etf',sub:'S&P 500 大盤指數'},
     {id:'TXN',n:'TXN',cost:303,qty:62,stopPct:0.90,stopRule:'成本-10%',ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
     {id:'ON',n:'ON',cost:118,qty:55,stopPct:0.90,stopRule:'成本-10%',ic:'O',cat:'power_us',sub:'SiC・Synaptics併購觀察'},
     {id:'MPWR',n:'MPWR',cost:1420,qty:3,stopPct:0.88,stopRule:'成本-12%',ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
+    {id:'MU',n:'MU',cost:983,qty:20,stopPct:0.88,stopRule:'成本-12%',ic:'Mu',cat:'memory',sub:'HBM・訂單排到2028'},
     {id:'VICR',n:'VICR',cost:71,qty:22,stopPct:0.88,stopRule:'成本-12%',ic:'Vi',cat:'power_us',sub:'800V純玩家',pending:true}
   ]
 };
