@@ -383,23 +383,18 @@ var CATS={
 var STOCKS={
   tw:[
     {id:'0050',n:'元大台50',cost:68.97,qty:285,stopPct:0.88,stopRule:'成本-12%（長線倉）',ic:'50',cat:'etf',sub:'台灣50指數・舊倉長線'},
-    {id:'2330',n:'台積電',cost:2410,qty:260,stopPct:0.89,stopRule:'季線估算-11%',ic:'積',cat:'foundry',sub:'AI CoWoS・玻璃載板'},
-    {id:'2303',n:'聯電',cost:172,qty:800,stopPct:0.90,stopRule:'成本-10%',ic:'聯',cat:'foundry',sub:'6/8吋晶圓・功率半導體'},
-    {id:'006208',n:'富邦台50',cost:0,qty:0,stopPct:0.88,stopRule:'定期定額，不設停損',ic:'208',cat:'etf',sub:'定期定額・每月NT$3萬',pending:true},
-    {id:'2481',n:'強茂',cost:141,qty:1000,stopPct:0.90,stopRule:'成本-10%',ic:'強',cat:'power',sub:'MOSFET・安世轉單',pending:true},
-    {id:'3675',n:'德微',cost:350,qty:343,stopPct:0.90,stopRule:'成本-10%',ic:'德',cat:'power',sub:'整流二極體・800V',pending:true},
-    {id:'8261',n:'富鼎',cost:200,qty:400,stopPct:0.90,stopRule:'成本-10%',ic:'富',cat:'power',sub:'高壓伺服器電源',pending:true},
-    {id:'6411',n:'晶焱',cost:265,qty:189,stopPct:0.88,stopRule:'成本-12%',ic:'晶',cat:'power',sub:'ESD/TVS保護元件',pending:true}
+    {id:'006208',n:'富邦台50',cost:245.02,qty:80,stopPct:0.88,stopRule:'定期定額，不設停損',ic:'208',cat:'etf',sub:'定期定額・每月NT$3萬'},
+    {id:'2330',n:'台積電',cost:2403,qty:360,stopPct:0.89,stopRule:'季線估算-11%',ic:'積',cat:'foundry',sub:'AI CoWoS・法說後加碼100股'},
+    {id:'2454',n:'聯發科',cost:3535,qty:150,stopPct:0.905,stopRule:'硬停損NT$3,200',ic:'發',cat:'foundry',sub:'AI ASIC・2027 EPS重估'}
   ],
   us:[
     {id:'GOOGL',n:'GOOGL',cost:329.28,qty:3,stopPct:0.90,stopRule:'成本-10%',ic:'G',cat:'googl',sub:'Google・AI雲端・舊倉'},
     {id:'TSLA',n:'TSLA',cost:440.90,qty:10,stopPct:0.82,stopRule:'$360元關卡',ic:'Te',cat:'ev',sub:'Optimus機器人・EV・舊倉'},
-    {id:'VOO',n:'VOO',cost:681,qty:18,stopPct:0.92,stopRule:'成本-8%',ic:'V',cat:'etf',sub:'S&P 500 大盤指數'},
+    {id:'VOO',n:'VOO',cost:681.7,qty:19.3,stopPct:0.92,stopRule:'定期定額，不設停損',ic:'V',cat:'etf',sub:'S&P 500・定期定額中'},
     {id:'TXN',n:'TXN',cost:303,qty:62,stopPct:0.90,stopRule:'成本-10%',ic:'T',cat:'power_us',sub:'MOSFET・7/22財報'},
-    {id:'ON',n:'ON',cost:118,qty:55,stopPct:0.90,stopRule:'成本-10%',ic:'O',cat:'power_us',sub:'SiC・Synaptics併購觀察'},
+    {id:'ON',n:'ON',cost:118,qty:55,stopPct:0.90,stopRule:'7/28財報硬檢查點',ic:'O',cat:'power_us',sub:'SiC・Synaptics併購觀察'},
     {id:'MPWR',n:'MPWR',cost:1420,qty:3,stopPct:0.88,stopRule:'成本-12%',ic:'M',cat:'power_us',sub:'DrMOS・AI伺服器'},
-    {id:'MU',n:'MU',cost:983,qty:20,stopPct:0.88,stopRule:'成本-12%',ic:'Mu',cat:'memory',sub:'HBM・訂單排到2028'},
-    {id:'VICR',n:'VICR',cost:71,qty:22,stopPct:0.88,stopRule:'成本-12%',ic:'Vi',cat:'power_us',sub:'800V純玩家',pending:true}
+    {id:'MU',n:'MU',cost:983,qty:20,stopPct:0.79,stopRule:'硬停損$780',ic:'Mu',cat:'memory',sub:'HBM・訂單排到2028'}
   ]
 };
 var EVENTS=[
